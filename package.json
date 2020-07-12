@@ -1,0 +1,18 @@
+{
+  "name": "reason-java-ffi",
+  "esy": {
+    "build": "dune build -p #{self.name}",
+    "install": "esy-installer #{self.name}.install"
+  },
+  "dependencies": {
+    "@esy-ocaml/reason": "~3.6.0",
+    "@opam/dune": "~2.6.1",
+    "@opam/ocaml-migrate-parsetree": "1.7.3",
+    "@opam/ppx_tools_versioned": "5.4.0",
+    "ocaml": "~4.10.0"
+  },
+  "devDependencies": {
+    "@opam/ocaml-lsp-server":
+      "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a50a85aacf2bf0479e7c8f8fd1a9fc977c2"
+  }
+}
