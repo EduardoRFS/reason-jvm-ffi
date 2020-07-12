@@ -1,0 +1,6 @@
+(library
+ (name reason_java_ffi_lib)
+ (public_name reason-java-ffi.lib)
+ (libraries ocaml-migrate-parsetree)
+ (preprocess
+  (pps ppx_tools_versioned.metaquot_410)))
