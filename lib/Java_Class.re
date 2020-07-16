@@ -1,8 +1,8 @@
 open Migrate_parsetree;
 open Ast_410;
 open Ast_helper;
-open Asttypes;
-open Longident;
+
+open Emit_Helper;
 
 let (let.some) = Option.bind;
 
@@ -17,19 +17,8 @@ let id_to_lid = id => {
     id.package
     |> String.split_on_char('.')
     |> List.map(String.capitalize_ascii);
-  let ident =
-    switch (modules) {
-    | [] => Ldot(Lident(last_module), "t")
-    | [first_mod, ...remaining] =>
-      let ldot =
-        List.fold_left(
-          (acc, md) => Ldot(acc, md),
-          Lident(first_mod),
-          remaining,
-        );
-      Ldot(Ldot(ldot, last_module), "t");
-    };
-  {txt: ident, loc: Location.none};
+  let modules = List.append(modules, [last_module]);
+  lident(~modules, "t");
 };
 
 /** a fully qualified name, using / instead of . */
@@ -46,10 +35,9 @@ type t = {
   methods: list(Java_Method.t),
 };
 
-let emit = t => {
-  let ident = name => Exp.ident({txt: Lident(name), loc: Location.none});
-  let var = name => Pat.var({txt: name, loc: Location.none});
+// TODO: class name to snake case
 
+let emit = t => {
   let clazz_id = "jni_jclazz";
   let object_id = "jni_jobj";
   let declare_methods = List.concat_map(Java_Method.emit, t.methods);
@@ -57,44 +45,41 @@ let emit = t => {
   let method_fields =
     List.map(
       ({Java_Method.name, _}) =>
-        Cf.method(
-          {txt: name, loc: Location.none},
+        pcf_method((
+          Located.mk(name),
           Public,
-          Cf.concrete(
-            Fresh,
-            [%expr [%e ident(name)]([%e ident(object_id)])],
-          ),
-        ),
+          Cf.concrete(Fresh, eapply(evar(name), [evar(object_id)])),
+        )),
       t.methods,
     );
   let inheritance_field = {
     let.some extends_id = t.extends;
-    let extends_lid = id_to_lid(extends_id);
-    let extends = Cl.constr(extends_lid, []);
-    let apply_class = Cl.apply(extends, [(Nolabel, ident(object_id))]);
-    Some(Cf.inherit_(Fresh, apply_class, None));
+    let extends_lid = id_to_lid(extends_id) |> Located.mk;
+    let extends = pcl_constr(extends_lid, []);
+    let apply_class = pcl_apply(extends, [(Nolabel, evar(object_id))]);
+    Some(pcf_inherit(Fresh, apply_class, None));
   };
   let fields =
     List.concat([
       List.filter_map(Fun.id, [inheritance_field]),
       method_fields,
     ]);
-  let class_expr = fields |> Cstr.mk(Pat.any()) |> Cl.structure;
-  let class_fun =
-    Cl.fun_(Asttypes.Nolabel, None, var(object_id), class_expr);
+  let class_expr = class_structure(~self=ppat_any, ~fields) |> pcl_structure;
+  let class_fun = pcl_fun(Nolabel, None, pvar(object_id), class_expr);
   let class_declaration =
-    Ci.mk(
-      {txt: t.id.name |> String.lowercase_ascii, loc: Location.none},
-      class_fun,
+    class_infos(
+      ~virt=Concrete,
+      ~params=[],
+      ~name=Located.mk(t.id.name |> String.uncapitalize_ascii),
+      ~expr=class_fun // TODO: wait, class_infos without class_expr?
     );
-
   let find_class = {
-    let name = id_to_jvm_name(t.id) |> Const.string |> Exp.constant;
-    [%str let [%p var(clazz_id)] = Jni.find_class([%e name])];
+    let name = id_to_jvm_name(t.id) |> estring;
+    [%str let [%p pvar(clazz_id)] = Jni.find_class([%e name])];
   };
   List.concat([
     find_class,
     declare_methods,
-    [Str.class_([class_declaration])],
+    [pstr_class([class_declaration])],
   ]);
 };

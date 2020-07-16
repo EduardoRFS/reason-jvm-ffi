@@ -4,8 +4,11 @@ module Ast_builder =
     let loc = Location.none;
   });
 include Ast_builder;
-include Located;
 
+let lident = (~modules=?, label) => {
+  let modules = Option.value(~default=[], modules);
+  List.append(modules, [label]) |> String.concat(".") |> lident;
+};
 let evar = (~modules=?, label) => {
   let modules = Option.value(~default=[], modules);
   List.append(modules, [label]) |> String.concat(".") |> evar;
