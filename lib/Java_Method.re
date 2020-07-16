@@ -1,9 +1,10 @@
 open Migrate_parsetree;
 open Ast_410;
 open Ast_helper;
-open Longident;
 open Fun;
 open Java_Type;
+
+open Emit_Helper;
 
 type t = {
   name: string,
@@ -32,10 +33,7 @@ let emit_call = (clazz_id, object_id, method_id, args, t) => {
       t.static
         ? "call_static_" ++ type_name ++ "_method"
         : "call_" ++ type_name ++ "_method";
-    Exp.ident({
-      txt: Ldot(Lident("Jni"), function_name),
-      loc: Location.none,
-    });
+    evar(~modules=["Jni"], function_name);
   };
   let args =
     [t.static ? clazz_id : object_id, method_id, args]
@@ -44,10 +42,7 @@ let emit_call = (clazz_id, object_id, method_id, args, t) => {
 };
 
 let emit_argument = ((name, java_type)) => {
-  open Ast_helper;
-  open Longident;
-
-  let identifier = Exp.ident({txt: Lident(name), loc: Location.none});
+  let identifier = evar(name);
   let read_expr =
     switch (java_type) {
     | Object(_) => id([%expr [%e identifier]#get_jni_jobj])
@@ -72,12 +67,6 @@ let emit_argument = ((name, java_type)) => {
 };
 
 let emit = t => {
-  open Ast_helper;
-  open Longident;
-
-  let id = name => Exp.ident({txt: Lident(name), loc: Location.none});
-  let var = name => Pat.var({txt: name, loc: Location.none});
-
   // TODO: escape these names
   let clazz_id = "jni_jclazz";
   let method_id = "jni_methodID";
@@ -87,18 +76,24 @@ let emit = t => {
     let name = t.name |> Const.string |> Exp.constant;
     let signature = to_jvm_signature(t) |> Const.string |> Exp.constant;
     %expr
-    Jni.get_methodID([%e id(clazz_id)], [%e name], [%e signature]);
+    Jni.get_methodID([%e evar(clazz_id)], [%e name], [%e signature]);
   };
   let declare_function = {
     let arguments =
       t.parameters |> List.map(emit_argument) |> Ast_helper.Exp.array;
     let call =
-      emit_call(id(clazz_id), id(object_id), id(method_id), arguments, t);
+      emit_call(
+        evar(clazz_id),
+        evar(object_id),
+        evar(method_id),
+        arguments,
+        t,
+      );
 
     let parameters =
       t.parameters
-      |> List.map(((name, _)) => (Asttypes.Labelled(name), var(name)));
-    let parameters = [(Asttypes.Nolabel, var(object_id)), ...parameters];
+      |> List.map(((name, _)) => (Asttypes.Labelled(name), pvar(name)));
+    let parameters = [(Asttypes.Nolabel, pvar(object_id)), ...parameters];
 
     List.fold_right(
       ((label, parameter), acc) => Exp.fun_(label, None, parameter, acc),
@@ -108,8 +103,8 @@ let emit = t => {
   };
 
   [%str
-    let [%p var(t.name)] = {
-      let [%p var(method_id)] = [%e declare_method_id];
+    let [%p pvar(t.name)] = {
+      let [%p pvar(method_id)] = [%e declare_method_id];
       %e
       declare_function;
     }
