@@ -93,7 +93,8 @@ let emit = t => {
     let parameters =
       t.parameters
       |> List.map(((name, _)) => (Asttypes.Labelled(name), pvar(name)));
-    let parameters = [(Asttypes.Nolabel, pvar(object_id)), ...parameters];
+    let last_parameter = t.static ? punit : pvar(object_id);
+    let parameters = [(Asttypes.Nolabel, last_parameter), ...parameters];
 
     List.fold_right(
       ((label, parameter), acc) => Exp.fun_(label, None, parameter, acc),

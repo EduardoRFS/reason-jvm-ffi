@@ -36,6 +36,7 @@ type t = {
 };
 
 // TODO: class name to snake case
+// TODO: escape override method name
 
 let emit = t => {
   let clazz_id = "jni_jclazz";
@@ -43,15 +44,15 @@ let emit = t => {
   let declare_methods = List.concat_map(Java_Method.emit, t.methods);
 
   let method_fields =
-    List.map(
-      ({Java_Method.name, _}) =>
-        pcf_method((
-          Located.mk(name),
-          Public,
-          Cf.concrete(Fresh, eapply(evar(name), [evar(object_id)])),
-        )),
-      t.methods,
-    );
+    t.methods
+    |> List.filter(t => !t.Java_Method.static)
+    |> List.map(({Java_Method.name, _}) =>
+         pcf_method((
+           Located.mk(name),
+           Public,
+           Cf.concrete(Fresh, eapply(evar(name), [evar(object_id)])),
+         ))
+       );
   let inheritance_field = {
     let.some extends_id = t.extends;
     let extends_lid = id_to_lid(extends_id) |> Located.mk;
