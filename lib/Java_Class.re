@@ -161,3 +161,14 @@ let emit_unsafe_type = t => {
     [psig_class([class_declaration])],
   );
 };
+let emit_module_type = t => {
+  let static_methods =
+    List.filter(({Java_Method.static, _}) => static, t.methods);
+  let static_methods = emit_methods_type(static_methods);
+  [%sig:
+    module Unsafe: {
+      module Please: {module Stop: {[%%s emit_unsafe_type(t)];};};
+    };
+    [%%s static_methods]
+  ];
+};
