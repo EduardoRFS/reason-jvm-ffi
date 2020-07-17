@@ -15,32 +15,37 @@ type t = {
 // TODO: class name to snake case
 // TODO: escape override method name
 
-let emit_unsafe = t => {
-  let clazz_id = "jni_jclazz";
-  let object_id = "jni_jobj";
-  let methods = t.methods |> List.filter(t => !t.Java_Method.static);
-  let declare_methods =
-    List.concat_map(
-      ({Java_Method.name, _} as method) =>
-        [%str
-          let [%p pvar(unsafe_name(name))] = [%e Java_Method.emit(method)]
-        ],
+let jni_class_name = "unsafe_jni_class";
+let emit_method = Java_Method.emit(jni_class_name);
+let emit_methods = methods =>
+  Java_Method.(
+    List.map(
+      method => {
+        let name = method.static ? method.name : unsafe_name(method.name);
+        [%stri let [%p pvar(name)] = [%e emit_method(method)]];
+      },
       methods,
-    );
+    )
+  );
+let emit_unsafe = t => {
+  let object_id = "jni_jobj";
+  let methods =
+    List.filter(({Java_Method.static, _}) => !static, t.methods);
+  let declare_methods = emit_methods(methods);
 
   let method_fields =
-    t.methods
-    |> List.filter(t => !t.Java_Method.static)
-    |> List.map(({Java_Method.name, _}) =>
-         pcf_method((
-           Located.mk(name),
-           Public,
-           Cfk_concrete(
-             Fresh,
-             eapply(evar(unsafe_name(name)), [evar(object_id)]),
-           ),
-         ))
-       );
+    List.map(
+      ({Java_Method.name, _}) =>
+        pcf_method((
+          Located.mk(name),
+          Public,
+          Cfk_concrete(
+            Fresh,
+            eapply(evar(unsafe_name(name)), [evar(object_id)]),
+          ),
+        )),
+      methods,
+    );
   let inheritance_field = {
     let.some extends_id = t.extends;
     let extends_lid = Object_Type.emit_unsafe_lid(extends_id) |> Located.mk;
@@ -64,11 +69,29 @@ let emit_unsafe = t => {
     );
   let find_class = {
     let name = Object_Type.to_jvm_name(t.id) |> estring;
-    [%str let [%p pvar(clazz_id)] = Jni.find_class([%e name])];
+    [%stri let [%p pvar(jni_class_name)] = Jni.find_class([%e name])];
   };
-  List.concat([
-    find_class,
-    declare_methods,
+  List.append(
+    [find_class, ...declare_methods],
     [pstr_class([class_declaration])],
-  ]);
+  );
+};
+let emit_module = t => {
+  let static_methods =
+    List.filter(({Java_Method.static, _}) => static, t.methods);
+  let static_methods = emit_methods(static_methods);
+
+  [%str
+    module Unsafe = {
+      module Please = {
+        module Stop = {
+          %s
+          emit_unsafe(t);
+        };
+      };
+    };
+    open Unsafe.Please.Stop;
+    %s
+    static_methods
+  ];
 };

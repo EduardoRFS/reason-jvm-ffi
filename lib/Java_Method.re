@@ -65,9 +65,8 @@ let emit_argument = ((name, java_type)) => {
   };
 };
 
-let emit = t => {
-  // TODO: escape these names
-  let clazz_id = "jni_jclazz";
+let emit = (jni_class_name, t) => {
+  // TODO: escape these names + jni_class_name
   let method_id = "jni_methodID";
   let object_id = "jni_jobj";
 
@@ -75,14 +74,14 @@ let emit = t => {
     let name = t.name |> Const.string |> Exp.constant;
     let signature = to_jvm_signature(t) |> Const.string |> Exp.constant;
     %expr
-    Jni.get_methodID([%e evar(clazz_id)], [%e name], [%e signature]);
+    Jni.get_methodID([%e evar(jni_class_name)], [%e name], [%e signature]);
   };
   let declare_function = {
     let arguments =
       t.parameters |> List.map(emit_argument) |> Ast_helper.Exp.array;
     let call =
       emit_call(
-        evar(clazz_id),
+        evar(jni_class_name),
         evar(object_id),
         evar(method_id),
         arguments,
@@ -95,10 +94,10 @@ let emit = t => {
     let last_parameter = t.static ? punit : pvar(object_id);
     let parameters = [(Asttypes.Nolabel, last_parameter), ...parameters];
 
-    List.fold_right(
-      ((label, parameter), acc) => Exp.fun_(label, None, parameter, acc),
-      parameters,
+    List.fold_left(
+      (acc, (label, parameter)) => Exp.fun_(label, None, parameter, acc),
       call,
+      parameters,
     );
   };
 
