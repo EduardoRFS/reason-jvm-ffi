@@ -4,8 +4,6 @@ open Ast_helper;
 open Fun;
 open Java_Type;
 
-open Emit_Helper;
-
 type t = {
   name: string,
   static: bool,
@@ -21,6 +19,7 @@ let to_jvm_signature = t => {
   "(" ++ args ++ ")" ++ ret;
 };
 
+open Emit_Helper;
 let emit_call = (clazz_id, object_id, method_id, args, t) => {
   let id_to_call = {
     let type_name =
@@ -110,4 +109,22 @@ let emit = t => {
       declare_function;
     }
   ];
+};
+
+let emit_type = t => {
+  let parameters =
+    List.map(
+      ((key, value)) => (key, Java_Type.emit_type(value)),
+      t.parameters,
+    );
+  // TODO: extract this type to somewhere else
+  let last_parameter =
+    t.static ? lident("unit") : lident(~modules=["Jni"], "obj");
+  let last_parameter = ptyp_constr(last_parameter |> Located.mk, []);
+  let return_type = Java_Type.emit_type(t.return_type);
+  List.fold_right(
+    ((key, core_type), acc) => ptyp_arrow(Labelled(key), core_type, acc),
+    parameters,
+    ptyp_arrow(Nolabel, last_parameter, return_type),
+  );
 };
