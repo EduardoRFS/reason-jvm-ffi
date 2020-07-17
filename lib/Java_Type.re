@@ -1,3 +1,32 @@
+module Object_Type = {
+  type t = {
+    package: string, // separeted by .
+    name: string,
+  };
+
+  let to_code_name = id => id.package ++ "." ++ id.name;
+  /** a fully qualified name, using / instead of . */
+  let to_jvm_name = id => {
+    let package =
+      id.package |> String.split_on_char('.') |> String.concat("/");
+    package ++ "/" ++ id.name;
+  };
+  let to_jvm_signature = id => {
+    let full_name = to_code_name(id);
+    "L" ++ full_name ++ ";";
+  };
+
+  let emit_lid = id => {
+    let last_module = String.capitalize_ascii(id.name);
+    let modules =
+      id.package
+      |> String.split_on_char('.')
+      |> List.map(String.capitalize_ascii);
+    let modules = List.append(modules, [last_module]);
+    Emit_Helper.lident(~modules, "t");
+  };
+};
+
 type t =
   | Void
   | Boolean
@@ -5,10 +34,11 @@ type t =
   | Char
   | Short
   | Int
+  // TODO: maybe Camlint?
   | Long
   | Float
   | Double
-  | Object(string)
+  | Object(Object_Type.t)
   | Array(t);
 let rec to_code_name =
   fun
@@ -21,7 +51,7 @@ let rec to_code_name =
   | Long => "long"
   | Float => "float"
   | Double => "double"
-  | Object(name) => name
+  | Object(object_type) => Object_Type.to_code_name(object_type)
   | Array(java_type) => to_code_name(java_type) ++ "[]";
 let rec to_jvm_signature =
   fun
@@ -34,5 +64,5 @@ let rec to_jvm_signature =
   | Long => "J"
   | Float => "F"
   | Double => "D"
-  | Object(name) => "L" ++ name ++ ";"
+  | Object(object_type) => Object_Type.to_jvm_signature(object_type)
   | Array(java_type) => "[" ++ to_jvm_signature(java_type);

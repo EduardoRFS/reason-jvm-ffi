@@ -1,32 +1,12 @@
 open Migrate_parsetree;
 open Ast_410;
 open Ast_helper;
-
 open Emit_Helper;
+open Java_Type;
 
 let (let.some) = Option.bind;
 
-type id = {
-  package: string,
-  name: string,
-};
-// TODO: proper lid
-let id_to_lid = id => {
-  let last_module = String.capitalize_ascii(id.name);
-  let modules =
-    id.package
-    |> String.split_on_char('.')
-    |> List.map(String.capitalize_ascii);
-  let modules = List.append(modules, [last_module]);
-  lident(~modules, "t");
-};
-
-/** a fully qualified name, using / instead of . */
-let id_to_jvm_name = id => {
-  let package =
-    id.package |> String.split_on_char('.') |> String.concat("/");
-  package ++ "/" ++ id.name;
-};
+type id = Object_Type.t;
 
 type t = {
   id,
@@ -55,7 +35,7 @@ let emit = t => {
        );
   let inheritance_field = {
     let.some extends_id = t.extends;
-    let extends_lid = id_to_lid(extends_id) |> Located.mk;
+    let extends_lid = Object_Type.emit_lid(extends_id) |> Located.mk;
     let extends = pcl_constr(extends_lid, []);
     let apply_class = pcl_apply(extends, [(Nolabel, evar(object_id))]);
     Some(pcf_inherit(Fresh, apply_class, None));
@@ -75,7 +55,7 @@ let emit = t => {
       ~expr=class_fun // TODO: wait, class_infos without class_expr?
     );
   let find_class = {
-    let name = id_to_jvm_name(t.id) |> estring;
+    let name = Object_Type.to_jvm_name(t.id) |> estring;
     [%str let [%p pvar(clazz_id)] = Jni.find_class([%e name])];
   };
   List.concat([
