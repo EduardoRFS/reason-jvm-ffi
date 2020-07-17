@@ -5,7 +5,8 @@ module Object_Type = {
     name: string,
   };
 
-  let to_code_name = id => id.package ++ "." ++ id.name;
+  let to_code_name = id =>
+    id.package ++ "." ++ String.capitalize_ascii(id.name);
   /** a fully qualified name, using / instead of . */
   let to_jvm_name = id => {
     let package =
