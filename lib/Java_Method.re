@@ -109,20 +109,28 @@ let emit = (jni_class_name, t) => {
   };
 };
 
-let emit_type = t => {
+let emit_type = (~is_method=false, t) => {
   let parameters =
-    List.map(
-      ((key, value)) => (key, Java_Type.emit_type(value)),
+    List.rev_map(
+      ((key, value)) => (Labelled(key), Java_Type.emit_type(value)),
       t.parameters,
     );
-  // TODO: extract this type to somewhere else
-  let last_parameter =
-    t.static ? lident("unit") : lident(~modules=["Jni"], "obj");
-  let last_parameter = ptyp_constr(last_parameter |> Located.mk, []);
+
   let return_type = Java_Type.emit_type(t.return_type);
-  List.fold_right(
-    ((key, core_type), acc) => ptyp_arrow(Labelled(key), core_type, acc),
-    parameters,
-    ptyp_arrow(Nolabel, last_parameter, return_type),
-  );
+  let method_type =
+    switch (parameters) {
+    | [] => ptyp_arrow(Nolabel, typ_unit, return_type)
+    | [(label, parameter), ...parameters] =>
+      List.fold_left(
+        (fn, (label, parameter)) => ptyp_arrow(label, parameter, fn),
+        ptyp_arrow(label, parameter, return_type),
+        parameters,
+      )
+    };
+  let additional_parameter =
+    ptyp_constr(lident(~modules=["Jni"], "obj") |> Located.mk, []);
+  let method_type =
+    is_method
+      ? method_type : ptyp_arrow(Nolabel, additional_parameter, method_type);
+  method_type;
 };

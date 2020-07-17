@@ -18,3 +18,4 @@ let evar = (~modules=?, label) => {
 
 let unsafe_name = name => "unsafe_" ++ name;
 let unsafe_t = unsafe_name("t");
+let typ_unit = ptyp_constr(lident("unit") |> Located.mk, []);
