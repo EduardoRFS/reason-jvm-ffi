@@ -102,13 +102,12 @@ let emit = t => {
     );
   };
 
-  [%str
-    let [%p pvar(t.name)] = {
-      let [%p pvar(method_id)] = [%e declare_method_id];
-      %e
-      declare_function;
-    }
-  ];
+  %expr
+  {
+    let [%p pvar(method_id)] = [%e declare_method_id];
+    %e
+    declare_function;
+  };
 };
 
 let emit_type = t => {

@@ -27,7 +27,16 @@ module Object_Type = {
     let modules = List.append(modules, [last_module]);
     lident(~modules, "t");
   };
-
+  let emit_unsafe_lid = id => {
+    let last_module = String.capitalize_ascii(id.name);
+    let modules =
+      id.package
+      |> String.split_on_char('.')
+      |> List.map(String.capitalize_ascii);
+    let modules =
+      List.append(modules, [last_module, "Unsafe", "Please", "Stop"]);
+    lident(~modules, unsafe_t);
+  };
   let emit_type = id => {
     let lid = emit_lid(id) |> Located.mk;
     ptyp_constr(lid, []);

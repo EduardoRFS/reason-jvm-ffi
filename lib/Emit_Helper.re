@@ -15,3 +15,6 @@ let evar = (~modules=?, label) => {
   let modules = Option.value(~default=[], modules);
   List.append(modules, [label]) |> String.concat(".") |> evar;
 };
+
+let unsafe_name = name => "unsafe_" ++ name;
+let unsafe_t = unsafe_name("t");
