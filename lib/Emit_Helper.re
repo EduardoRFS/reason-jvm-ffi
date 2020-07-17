@@ -1,3 +1,5 @@
+include Migrate_parsetree;
+include Ast_410;
 include Ppxlib;
 module Ast_builder =
   Ast_builder.Make({

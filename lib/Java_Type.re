@@ -1,4 +1,5 @@
 module Object_Type = {
+  // TODO: it's not only a type
   type t = {
     package: string, // separeted by .
     name: string,
@@ -16,6 +17,7 @@ module Object_Type = {
     "L" ++ full_name ++ ";";
   };
 
+  open Emit_Helper;
   let emit_lid = id => {
     let last_module = String.capitalize_ascii(id.name);
     let modules =
@@ -23,7 +25,12 @@ module Object_Type = {
       |> String.split_on_char('.')
       |> List.map(String.capitalize_ascii);
     let modules = List.append(modules, [last_module]);
-    Emit_Helper.lident(~modules, "t");
+    lident(~modules, "t");
+  };
+
+  let emit_type = id => {
+    let lid = emit_lid(id) |> Located.mk;
+    ptyp_constr(lid, []);
   };
 };
 
@@ -66,3 +73,19 @@ let rec to_jvm_signature =
   | Double => "D"
   | Object(object_type) => Object_Type.to_jvm_signature(object_type)
   | Array(java_type) => "[" ++ to_jvm_signature(java_type);
+
+open Emit_Helper;
+let rec emit_type =
+  fun
+  | Void => [%type: unit]
+  | Boolean => [%type: bool]
+  // TODO: type aliases
+  | Byte => [%type: int]
+  | Char => [%type: int]
+  | Short => [%type: int]
+  | Int => [%type: int32]
+  | Long => [%type: int64]
+  | Float => [%type: float]
+  | Double => [%type: float]
+  | Object(object_type) => Object_Type.emit_type(object_type)
+  | Array(java_type) => [%type: list([%t emit_type(java_type)])];
