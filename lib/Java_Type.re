@@ -14,8 +14,21 @@ module Object_Type = {
       id.package |> String.split_on_char('.') |> String.concat("/");
     package ++ "/" ++ id.name;
   };
+  let of_jvm_signature = string =>
+    switch (String.index_opt(string, ';')) {
+    | Some(index) =>
+      // TODO: subclass
+      let full_name = String.sub(string, 1, index - 1);
+      let parts = String.split_on_char('/', full_name) |> List.rev;
+      switch (parts) {
+      | [name, ...path] =>
+        Ok(({package: List.rev(path) |> String.concat("."), name}, index))
+      | [] => Error("found L;")
+      };
+    | None => Error("missing ; at object")
+    };
   let to_jvm_signature = id => {
-    let full_name = to_code_name(id);
+    let full_name = to_jvm_name(id);
     "L" ++ full_name ++ ";";
   };
 };
@@ -47,6 +60,35 @@ let rec to_code_name =
   | Double => "double"
   | Object(object_type) => Object_Type.to_code_name(object_type)
   | Array(java_type) => to_code_name(java_type) ++ "[]";
+
+let (let.ok) = Result.bind;
+let rec of_jvm_signature = string => {
+  let.ok first_letter =
+    switch (string) {
+    | "" => Error("empty string")
+    | string => Ok(string.[0])
+    };
+  // TODO: improve this
+  switch (first_letter) {
+  | 'V' => Ok((Void, 1))
+  | 'Z' => Ok((Boolean, 1))
+  | 'B' => Ok((Byte, 1))
+  | 'C' => Ok((Char, 1))
+  | 'S' => Ok((Short, 1))
+  | 'I' => Ok((Int, 1))
+  | 'J' => Ok((Long, 1))
+  | 'F' => Ok((Float, 1))
+  | 'D' => Ok((Double, 1))
+  | '[' =>
+    let remaining_string = String.sub(string, 1, String.length(string) - 1);
+    let.ok (array_type, position) = of_jvm_signature(remaining_string);
+    Ok((Array(array_type), position + 1));
+  | 'L' =>
+    let.ok (object_type, position) = Object_Type.of_jvm_signature(string);
+    Ok((Object(object_type), position));
+  | _ => Error("unknown type")
+  };
+};
 let rec to_jvm_signature =
   fun
   | Void => "V"
