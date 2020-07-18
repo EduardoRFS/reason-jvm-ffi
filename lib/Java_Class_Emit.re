@@ -96,7 +96,7 @@ let emit_functor_parameters_type = t => {
       // TODO: this kinda of module creationg should be centralized
       module_declaration(
         ~name=Located.mk(Some(class_id.name |> String.capitalize_ascii)),
-        ~type_=pmty_ident(Located.mk(class_lid)),
+        ~type_=pmty_typeof(pmod_ident(Located.mk(class_lid))),
       )
       |> psig_module;
     });
