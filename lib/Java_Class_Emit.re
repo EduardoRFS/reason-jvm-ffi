@@ -68,6 +68,51 @@ let emit_unsafe = t => {
     [pstr_class([class_declaration])],
   );
 };
+let emit_functor_parameters_type = t => {
+  // TODO: duplicated because mutually recursive
+  let emit_alias_type = {
+    let rec emit_package_type = (~header=[], class_fn, t) => {
+      let packages =
+        t
+        |> Java_Package.packages
+        |> List.rev_map(package =>
+             emit_package_type(class_fn, package) |> psig_module
+           );
+      let modules =
+        // TODO: handle exception
+        t |> Java_Package.classes |> List.rev_map(class_fn);
+
+      let signature = List.concat([header, packages, modules]);
+      module_declaration(
+        ~name=Located.mk(Some(t.name |> String.capitalize_ascii)),
+        ~type_=pmty_signature(signature),
+      );
+    };
+    emit_package_type(
+      // TODO: hardcoded Javatype
+
+        ~header=[[%sigi: open Javatype]],
+        class_id => {
+          let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
+          [%sigi: type t = [%t typ_t]];
+        },
+      );
+  };
+  let required_classes = find_required_classes(t);
+  let modules = {
+    let package = Java_Package.make(".");
+    required_classes
+    |> List.fold_left(
+         (pkg, clazz) => Java_Package.add_to_package(clazz, pkg),
+         package,
+       )
+    // TODO: classes on default package???
+    |> Java_Package.packages
+    |> List.rev_map(emit_alias_type);
+  };
+
+  pmty_signature([psig_recmodule(modules)]);
+};
 let emit_functor = t => {
   let static_methods =
     List.filter(({Java_Method.static, _}) => static, t.methods);
