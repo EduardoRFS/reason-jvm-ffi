@@ -118,7 +118,7 @@ let emit_functor = t => {
     List.filter(({Java_Method.static, _}) => static, t.methods);
   let static_methods = emit_methods(static_methods);
 
-  [%str
+  let content = [%str
     module Unsafe = {
       module Please = {
         module Stop = {
@@ -131,6 +131,12 @@ let emit_functor = t => {
     %s
     static_methods
   ];
+  // TODO: hardcoded Javatype
+  let parameter =
+    Named(Located.mk(Some("Javatype")), emit_functor_parameters_type(t));
+  let mod_functor = pmod_functor(parameter, pmod_structure(content));
+  module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
+  |> pstr_module;
 };
 
 // TODO: this is mostly duplicated code grr
