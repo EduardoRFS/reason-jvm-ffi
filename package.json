@@ -8,6 +8,7 @@
     "@esy-ocaml/reason": "~3.6.0",
     "@opam/dune": "~2.6.1",
     "@opam/ocaml-migrate-parsetree": "1.7.3",
+    "@opam/ppx_deriving": "4.5",
     "@opam/ppx_tools_versioned": "5.4.0",
     "@opam/ppxlib": "0.14.0",
     "camljava": "EduardoRFS/camljava:package.json",

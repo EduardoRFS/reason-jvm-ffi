@@ -1,5 +1,6 @@
 module Object_Type = {
   // TODO: it's not only a type
+  [@deriving (eq, ord)]
   type t = {
     package: string, // separeted by .
     name: string,
@@ -44,6 +45,7 @@ module Object_Type = {
   };
 };
 
+[@deriving (eq, ord)]
 type t =
   | Void
   | Boolean
@@ -83,6 +85,11 @@ let rec to_jvm_signature =
   | Double => "D"
   | Object(object_type) => Object_Type.to_jvm_signature(object_type)
   | Array(java_type) => "[" ++ to_jvm_signature(java_type);
+
+let find_required_class =
+  fun
+  | Object(object_type) => [object_type]
+  | _ => [];
 
 open Emit_Helper;
 let rec emit_type =
