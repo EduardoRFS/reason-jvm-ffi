@@ -71,7 +71,7 @@ let emit_unsafe = t => {
 let emit_functor_parameters_type = t => {
   // TODO: duplicated because mutually recursive
   let emit_alias_type = {
-    let rec emit_package_type = (~header=[], class_fn, t) => {
+    let rec emit_package_type = (class_fn, t) => {
       let packages =
         t
         |> Java_Package.packages
@@ -82,7 +82,7 @@ let emit_functor_parameters_type = t => {
         // TODO: handle exception
         t |> Java_Package.classes |> List.rev_map(class_fn);
 
-      let signature = List.concat([header, packages, modules]);
+      let signature = List.append(packages, modules);
       module_declaration(
         ~name=Located.mk(Some(t.name |> String.capitalize_ascii)),
         ~type_=pmty_signature(signature),
@@ -90,18 +90,15 @@ let emit_functor_parameters_type = t => {
     };
     emit_package_type(
       // TODO: hardcoded Javatype
-
-        ~header=[[%sigi: open Javatype]],
-        class_id => {
-          let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
-          // TODO: this kinda of module creationg should be centralized
-          module_declaration(
-            ~name=Located.mk(Some(class_id.name |> String.capitalize_ascii)),
-            ~type_=pmty_signature([%sig: type t = [%t typ_t]]),
-          )
-          |> psig_module;
-        },
-      );
+      class_id => {
+      let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
+      // TODO: this kinda of module creationg should be centralized
+      module_declaration(
+        ~name=Located.mk(Some(class_id.name |> String.capitalize_ascii)),
+        ~type_=pmty_signature([%sig: type t = [%t typ_t]]),
+      )
+      |> psig_module;
+    });
   };
   let required_classes = find_required_classes(t);
   let modules = {
@@ -115,8 +112,9 @@ let emit_functor_parameters_type = t => {
     |> Java_Package.packages
     |> List.rev_map(emit_alias_type);
   };
-
-  pmty_signature([psig_recmodule(modules)]);
+  // TODO: hardcoded Javatype
+  let open_javatype = [%sigi: open Javatype];
+  pmty_signature([open_javatype, psig_recmodule(modules)]);
 };
 let emit_functor = t => {
   let static_methods =
