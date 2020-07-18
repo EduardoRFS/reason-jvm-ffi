@@ -110,11 +110,12 @@ let emit_functor_parameters_type = t => {
        )
     // TODO: classes on default package???
     |> Java_Package.packages
-    |> List.rev_map(emit_alias_type);
+    |> List.rev_map(emit_alias_type)
+    |> List.rev_map(psig_module);
   };
   // TODO: hardcoded Javatype
   let open_javatype = [%sigi: open Javatype];
-  pmty_signature([open_javatype, psig_recmodule(modules)]);
+  pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = t => {
   let static_methods =
