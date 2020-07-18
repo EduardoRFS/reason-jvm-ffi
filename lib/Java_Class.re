@@ -167,7 +167,27 @@ let emit_module_type = t => {
   let static_methods =
     List.filter(({Java_Method.static, _}) => static, t.methods);
   let static_methods = emit_methods_type(static_methods);
-  let signature = List.append(static_methods, emit_unsafe_type(t));
+  let type_declaration = {
+    let alias =
+      ptyp_constr(
+        Located.mk(Java_Type.Object_Type.emit_unsafe_lid(t.id)),
+        [],
+      );
+    type_declaration(
+      ~name=Located.mk("t"),
+      ~params=[],
+      ~cstrs=[],
+      ~kind=Ptype_abstract,
+      ~private_=Public,
+      ~manifest=Some(alias),
+    );
+  };
+  let signature =
+    List.concat([
+      emit_unsafe_type(t),
+      static_methods,
+      [psig_type(Recursive, [type_declaration])],
+    ]);
   module_declaration(
     ~name=Located.mk(Some(t.id.name)),
     ~type_=pmty_signature(signature),
