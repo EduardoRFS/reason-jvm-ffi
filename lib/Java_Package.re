@@ -52,7 +52,7 @@ let rec emit_type = (env, t) => {
     |> StringMap.bindings
     |> List.rev_map(((_, class_id)) =>
          Java_Env.find(class_id, env)
-         |> Java_Class.emit_module_type
+         |> Java_Class_Emit.emit_module_type
          |> psig_module
        );
   let signature = List.append(packages, modules);
