@@ -1,25 +1,38 @@
 open Java_Package;
 open Emit_Helper;
 
-let rec emit_type = (env, t) => {
+let rec emit_package_type = (~header=[], class_fn, t) => {
   let packages =
-    t.packages
-    |> StringMap.bindings
-    |> List.rev_map(((_, package)) =>
-         emit_type(env, package) |> psig_module
+    t
+    |> packages
+    |> List.rev_map(package =>
+         emit_package_type(class_fn, package) |> psig_module
        );
   let modules =
-    t.classes
     // TODO: handle exception
-    |> StringMap.bindings
-    |> List.rev_map(((_, class_id)) =>
-         Java_Env.find(class_id, env)
-         |> Java_Class_Emit.emit_module_type
-         |> psig_module
-       );
-  let signature = List.append(packages, modules);
+    t |> classes |> List.rev_map(class_fn);
+
+  let signature = List.concat([header, packages, modules]);
   module_declaration(
     ~name=Located.mk(Some(t.name |> String.capitalize_ascii)),
     ~type_=pmty_signature(signature),
   );
 };
+let emit_type = (env, t) =>
+  emit_package_type(
+    class_id =>
+      Java_Env.find(class_id, env)
+      |> Java_Class_Emit.emit_module_type
+      |> psig_module,
+    t,
+  );
+let emit_alias_type = t =>
+  emit_package_type(
+    // TODO: hardcoded Javatype
+    ~header=[[%sigi: open Javatype]],
+    class_id => {
+      let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
+      [%sigi: type t = [%t typ_t]];
+    },
+    t,
+  );

@@ -1,6 +1,9 @@
 open Java_Type;
 
-module StringMap = Map.Make(String);
+module StringMap = {
+  include Map.Make(String);
+  let values = t => bindings(t) |> List.map(((_, value)) => value);
+};
 
 type t = {
   name: string,
@@ -14,6 +17,8 @@ let make = (~packages=StringMap.empty, ~classes=StringMap.empty, name) => {
   classes,
 };
 
+let packages = t => StringMap.values(t.packages);
+let classes = t => StringMap.values(t.classes);
 // TODO: class and package with same name
 // com.github.eduardorfs.Something
 // com.github.Eduardorfs
