@@ -122,6 +122,7 @@ let emit_functor = t => {
   let static_methods = emit_methods(static_methods);
 
   let content = [%str
+    open Javatype;
     module Unsafe = {
       module Please = {
         module Stop = {
