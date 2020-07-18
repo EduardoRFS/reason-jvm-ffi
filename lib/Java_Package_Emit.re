@@ -34,3 +34,30 @@ let emit_alias_type = t =>
     },
     t,
   );
+
+// TODO: classes in default package
+
+let emit_file_type = (env, t) => {
+  let packages = packages(t);
+  let modules = packages |> List.map(emit_type(env));
+  [%sig: open Camljava; [%%s [psig_recmodule(modules)]]];
+};
+
+let emit_file_classes = (env, t) => {
+  let rec all_classes = (acc, t) => {
+    let classes =
+      classes(t)
+      |> List.map(id => {
+           // TODO: exception
+           let java_class = Java_Env.find(id, env);
+           (id, Java_Class_Emit.emit_file(java_class));
+         });
+    let new_acc = List.append(classes, acc);
+    switch (packages(t)) {
+    | [] => acc
+    | packages => packages |> List.concat_map(all_classes(new_acc))
+    };
+  };
+  let packages = packages(t);
+  packages |> List.concat_map(all_classes([]));
+};

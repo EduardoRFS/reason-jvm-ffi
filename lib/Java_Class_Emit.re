@@ -144,6 +144,11 @@ let emit_functor = t => {
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
+let emit_file = t => [%str
+  open Camljava;
+  %s
+  [emit_functor(t)]
+];
 
 // TODO: this is mostly duplicated code grr
 let emit_methods_type = methods =>
