@@ -156,19 +156,20 @@ let emit_unsafe_type = t => {
       ~name=Located.mk(unsafe_t),
       ~expr=class_fun,
     );
-  List.append(
-    [jni_class_identifier, ...declare_methods],
-    [psig_class([class_declaration])],
-  );
+  let content =
+    List.append(
+      [jni_class_identifier, ...declare_methods],
+      [psig_class([class_declaration])],
+    );
+  [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
 };
 let emit_module_type = t => {
   let static_methods =
     List.filter(({Java_Method.static, _}) => static, t.methods);
   let static_methods = emit_methods_type(static_methods);
-  [%sig:
-    module Unsafe: {
-      module Please: {module Stop: {[%%s emit_unsafe_type(t)];};};
-    };
-    [%%s static_methods]
-  ];
+  let signature = List.append(static_methods, emit_unsafe_type(t));
+  module_declaration(
+    ~name=Located.mk(Some(t.id.name)),
+    ~type_=pmty_signature(signature),
+  );
 };
