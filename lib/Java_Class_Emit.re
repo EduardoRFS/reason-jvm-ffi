@@ -91,11 +91,12 @@ let emit_functor_parameters_type = t => {
     emit_package_type(
       // TODO: hardcoded Javatype
       class_id => {
-      let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
+      let class_lid =
+        Java_Type_Emit.Object_Type_Emit.emit_module_lid(class_id);
       // TODO: this kinda of module creationg should be centralized
       module_declaration(
         ~name=Located.mk(Some(class_id.name |> String.capitalize_ascii)),
-        ~type_=pmty_signature([%sig: type t = [%t typ_t]]),
+        ~type_=pmty_ident(Located.mk(class_lid)),
       )
       |> psig_module;
     });
