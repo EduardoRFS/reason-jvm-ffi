@@ -40,6 +40,7 @@ module Object_Type = {
 
 [@deriving (show, eq, ord)]
 type t =
+  // TODO: void should probably be removed
   | Void
   | Boolean
   | Byte

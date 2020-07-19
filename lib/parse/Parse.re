@@ -8,6 +8,12 @@ open Javalib;
 
 let (let.some) = Option.bind;
 
+let class_path = name => {
+  let class_path = class_path(name);
+  Gc.finalise(close_class_path, class_path);
+  class_path;
+};
+
 let class_name_to_object_type = class_name => {
   package: cn_package(class_name),
   name: cn_name(class_name),
@@ -73,4 +79,24 @@ let jclass_to_java_class = jclass => {
     |> MethodMap.value_elements
     |> List.map(jmethod_to_java_method);
   Java_Class.{id, extends, methods};
+};
+
+let create_env_and_package = (folder, classes) => {
+  let class_path = class_path(folder);
+  let classes =
+    classes
+    |> List.map(make_cn)
+    |> List.map(get_class(class_path))
+    |> List.map(
+         fun
+         | JInterface(_) => failwith("currently not supported")
+         | JClass(jclass) => {
+             let java_class = jclass_to_java_class(jclass);
+             (java_class.Java_Class.id, java_class);
+           },
+       );
+
+  let env = classes |> List.to_seq |> Java_Env.of_seq;
+  let package = Java_Package.of_env(".", env);
+  (env, package);
 };

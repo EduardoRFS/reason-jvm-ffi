@@ -43,3 +43,5 @@ let add_to_package = ({Object_Type.package, _} as object_type, t) => {
 };
 let of_classes = name =>
   List.fold_left((pkg, clazz) => add_to_package(clazz, pkg), make(name));
+let of_env = (name, env) =>
+  Java_Env.bindings(env) |> List.map(((key, _)) => key) |> of_classes(name);
