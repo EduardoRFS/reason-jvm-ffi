@@ -1,3 +1,4 @@
+[@deriving show]
 type t = {
   name: string,
   static: bool,
