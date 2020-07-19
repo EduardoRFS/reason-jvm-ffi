@@ -1,3 +1,5 @@
+let (let.ok) = Result.bind;
+
 module Object_Type = {
   // TODO: it's not only a type
   [@deriving (show, eq, ord)]
@@ -9,6 +11,13 @@ module Object_Type = {
   let to_code_name = id =>
     id.package ++ "." ++ String.capitalize_ascii(id.name);
   /** a fully qualified name, using / instead of . */
+  let of_jvm_name = name =>
+    switch (String.split_on_char('/', name) |> List.rev) {
+    | [name, ...parts] =>
+      let package = parts |> List.rev |> String.concat(".");
+      Ok({package, name});
+    | [] => Error("empty jvm_name")
+    };
   let to_jvm_name = id => {
     let package =
       id.package |> String.split_on_char('.') |> String.concat("/");
@@ -19,12 +28,8 @@ module Object_Type = {
     | Some(index) =>
       // TODO: subclass
       let full_name = String.sub(string, 1, index - 1);
-      let parts = String.split_on_char('/', full_name) |> List.rev;
-      switch (parts) {
-      | [name, ...path] =>
-        Ok(({package: List.rev(path) |> String.concat("."), name}, index))
-      | [] => Error("found L;")
-      };
+      let.ok object_type = of_jvm_name(full_name);
+      Ok((object_type, index));
     | None => Error("missing ; at object")
     };
   let to_jvm_signature = id => {
@@ -61,7 +66,6 @@ let rec to_code_name =
   | Object(object_type) => Object_Type.to_code_name(object_type)
   | Array(java_type) => to_code_name(java_type) ++ "[]";
 
-let (let.ok) = Result.bind;
 let rec of_jvm_signature = string => {
   let.ok first_letter =
     switch (string) {
