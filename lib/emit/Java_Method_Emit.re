@@ -1,12 +1,11 @@
-open Migrate_parsetree;
-open Ast_410;
-open Ast_helper;
 open Fun;
 open Java_Type;
 open Emit_Helper;
+open Ast_helper;
 
 open Java_Method;
 
+// TODO: should static have unsafe version without jclass applied?
 let emit_call = (clazz_id, object_id, method_id, args, t) => {
   let id_to_call = {
     let type_name =
