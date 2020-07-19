@@ -4,23 +4,23 @@ module Object_Type = {
   // TODO: it's not only a type
   [@deriving (show, eq, ord)]
   type t = {
-    package: string, // separeted by .
+    package: list(string),
     name: string,
   };
 
   let to_code_name = id =>
-    id.package ++ "." ++ String.capitalize_ascii(id.name);
+    List.append(id.package, [id.name]) |> String.concat(".");
+
   /** a fully qualified name, using / instead of . */
   let of_jvm_name = name =>
     switch (String.split_on_char('/', name) |> List.rev) {
     | [name, ...parts] =>
-      let package = parts |> List.rev |> String.concat(".");
+      let package = parts |> List.rev;
       Ok({package, name});
     | [] => Error("empty jvm_name")
     };
   let to_jvm_name = id => {
-    let package =
-      id.package |> String.split_on_char('.') |> String.concat("/");
+    let package = id.package |> String.concat("/");
     package ++ "/" ++ id.name;
   };
   let of_jvm_signature = string =>

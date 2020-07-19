@@ -6,10 +6,7 @@ module Object_Type_Emit = {
 
   let emit_module_lid = id => {
     let last_module = String.capitalize_ascii(id.name);
-    let modules =
-      id.package
-      |> String.split_on_char('.')
-      |> List.map(String.capitalize_ascii);
+    let modules = id.package |> List.map(String.capitalize_ascii);
     lident(~modules, last_module);
   };
   let emit_lid = id => Ldot(emit_module_lid(id), "t");
