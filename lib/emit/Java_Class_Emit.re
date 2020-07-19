@@ -157,9 +157,11 @@ let emit_methods_type = methods =>
     List.map(
       method => {
         let name = method.static ? method.name : unsafe_name(method.name);
+        let is_unsafe = !method.static;
         value_description(
           ~name=Located.mk(name),
-          ~type_=Java_Method_Emit.emit_type(method),
+          ~type_=
+            Java_Method_Emit.emit_type(~is_unsafe, jni_class_name, method),
           ~prim=[],
         )
         |> psig_value;
@@ -185,7 +187,7 @@ let emit_unsafe_type = t => {
           Located.mk(name),
           Public,
           Concrete,
-          Java_Method_Emit.emit_type(~is_method=true, method),
+          Java_Method_Emit.emit_type(jni_class_name, method),
         )),
       methods,
     );

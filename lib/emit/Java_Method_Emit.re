@@ -47,10 +47,10 @@ let emit_argument = ((name, java_type)) => {
   };
 };
 
+let object_id = "this";
 let emit = (jni_class_name, t) => {
   // TODO: escape these names + jni_class_name
   let method_id = "jni_methodID";
-  let object_id = "jni_jobj";
 
   let declare_method_id = {
     let name = estring(t.name);
@@ -72,8 +72,13 @@ let emit = (jni_class_name, t) => {
     let parameters =
       t.parameters
       |> List.map(((name, _)) => (Labelled(name), pvar(name)));
-    let last_parameter = t.static ? punit : pvar(object_id);
-    let parameters = [(Nolabel, last_parameter), ...parameters];
+    let parameters = [
+      t.static
+        ? (Labelled(jni_class_name), pvar(jni_class_name))
+        : (Labelled(object_id), pvar(object_id)),
+      ...parameters,
+    ];
+    let parameters = [(Nolabel, punit), ...List.rev(parameters)];
 
     List.fold_left(
       (acc, (label, parameter)) => pexp_fun(label, None, parameter, acc),
@@ -90,28 +95,27 @@ let emit = (jni_class_name, t) => {
   };
 };
 
-let emit_type = (~is_method=false, t) => {
+// TODO: this API is weird
+let emit_type = (~is_unsafe=false, jni_class_name, t) => {
   let parameters =
-    List.rev_map(
-      ((key, value)) => (Labelled(key), Java_Type_Emit.emit_type(value)),
+    List.map(
+      ((name, value)) =>
+        (Labelled(name), Java_Type_Emit.emit_type(value)),
       t.parameters,
     );
+  let additional_parameter =
+    switch (is_unsafe, t.static) {
+    | (false, _) => []
+    | (true, true) => [(Labelled(jni_class_name), [%type: Jni.clazz])]
+    | (true, false) => [(Labelled(object_id), [%type: Jni.obj])]
+    };
+  let parameters = List.append(additional_parameter, parameters);
+  let parameters = [(Nolabel, typ_unit), ...List.rev(parameters)];
 
   let return_type = Java_Type_Emit.emit_type(t.return_type);
-  let method_type =
-    switch (parameters) {
-    | [] => ptyp_arrow(Nolabel, typ_unit, return_type)
-    | [(label, parameter), ...parameters] =>
-      List.fold_left(
-        (fn, (label, parameter)) => ptyp_arrow(label, parameter, fn),
-        ptyp_arrow(label, parameter, return_type),
-        parameters,
-      )
-    };
-  let additional_parameter =
-    ptyp_constr(lident(~modules=["Jni"], "obj") |> Located.mk, []);
-  let method_type =
-    is_method
-      ? method_type : ptyp_arrow(Nolabel, additional_parameter, method_type);
-  method_type;
+  List.fold_left(
+    (typ, (label, parameter)) => ptyp_arrow(label, parameter, typ),
+    return_type,
+    parameters,
+  );
 };
