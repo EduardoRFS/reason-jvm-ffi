@@ -8,6 +8,7 @@ type t = {
 let (let.ok) = Result.bind;
 
 // TODO: make a proper lexer
+// TODO: this function should have another name
 let of_jvm_signature = (~name, ~static, string) => {
   let rec parse_parameters = ((acc, position), string) =>
     switch (string) {
@@ -43,9 +44,9 @@ let of_jvm_signature = (~name, ~static, string) => {
   // TODO: recover the name
   let parameters =
     parameters
-    |> List.mapi((index, param_type) =>
-         ("param_" ++ string_of_int(index), param_type)
-       );
+    |> List.mapi((index, param_type)
+         // TODO: find a way to extract names
+         => ("param_" ++ string_of_int(index), param_type));
   Ok({name, static, parameters, return_type});
 };
 let to_jvm_signature = t => {
