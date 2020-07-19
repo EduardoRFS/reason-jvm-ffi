@@ -41,3 +41,5 @@ let add_to_package = ({Object_Type.package, _} as object_type, t) => {
     };
   add_internal(t, String.split_on_char('.', package));
 };
+let of_classes = name =>
+  List.fold_left((pkg, clazz) => add_to_package(clazz, pkg), make(name));

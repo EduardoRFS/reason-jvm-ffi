@@ -103,12 +103,8 @@ let emit_functor_parameters_type = t => {
   };
   let required_classes = find_required_classes(t);
   let modules = {
-    let package = Java_Package.make(".");
     required_classes
-    |> List.fold_left(
-         (pkg, clazz) => Java_Package.add_to_package(clazz, pkg),
-         package,
-       )
+    |> Java_Package.of_classes(".")
     // TODO: classes on default package???
     |> Java_Package.packages
     |> List.rev_map(emit_alias_type)
