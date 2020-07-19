@@ -16,7 +16,7 @@ let class_path = name => {
 
 let class_name_to_object_type = class_name => {
   package: cn_package(class_name),
-  name: cn_name(class_name),
+  name: cn_simple_name(class_name),
 };
 let rec value_type_to_java_type =
   fun
