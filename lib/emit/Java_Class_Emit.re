@@ -111,7 +111,10 @@ let emit_functor_parameters_type = t => {
     |> List.rev_map(psig_module);
   };
   // TODO: hardcoded Javatype
-  let open_javatype = [%sigi: open Javatype];
+  let open_javatype = [%sigi:
+    [@ocaml.warning "-33"]
+    open Javatype
+  ];
   pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = t => {
@@ -120,6 +123,7 @@ let emit_functor = t => {
   let static_methods = emit_methods(static_methods);
 
   let content = [%str
+    [@ocaml.warning "-33"]
     open Javatype;
     module Unsafe = {
       module Please = {
@@ -129,6 +133,7 @@ let emit_functor = t => {
         };
       };
     };
+    [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
     static_methods
