@@ -77,7 +77,11 @@ let jclass_to_java_class = jclass => {
   let methods =
     jclass.c_methods
     |> MethodMap.value_elements
-    |> List.map(jmethod_to_java_method);
+    |> List.filter_map(jmethod => {
+         let java_method = jmethod_to_java_method(jmethod);
+         // TODO: support constructors and static
+         java_method.Java_Method.name == "<init>" ? None : Some(java_method);
+       });
   Java_Class.{id, extends, methods};
 };
 
