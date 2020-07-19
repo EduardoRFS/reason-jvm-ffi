@@ -54,7 +54,7 @@ let emit_file_classes = (env, t) => {
          });
     let new_acc = List.append(classes, acc);
     switch (packages(t)) {
-    | [] => acc
+    | [] => new_acc
     | packages => packages |> List.concat_map(all_classes(new_acc))
     };
   };
