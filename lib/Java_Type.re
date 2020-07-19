@@ -1,6 +1,6 @@
 module Object_Type = {
   // TODO: it's not only a type
-  [@deriving (eq, ord)]
+  [@deriving (show, eq, ord)]
   type t = {
     package: string, // separeted by .
     name: string,
@@ -33,7 +33,7 @@ module Object_Type = {
   };
 };
 
-[@deriving (eq, ord)]
+[@deriving (show, eq, ord)]
 type t =
   | Void
   | Boolean
