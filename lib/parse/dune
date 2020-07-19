@@ -1,0 +1,5 @@
+(library
+ (name reason_java_ffi_lib_parse)
+ (public_name reason-java-ffi.lib.parse)
+ (libraries reason_java_ffi_lib_emit javalib)
+ (flags -open Stdlib))
