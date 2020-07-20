@@ -1,6 +1,7 @@
 // TODO: access
 [@deriving show]
 type t = {
+  java_name: string,
   name: string,
   static: bool,
   parameters: list((string, Java_Type.t)),

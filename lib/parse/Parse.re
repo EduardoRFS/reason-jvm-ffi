@@ -37,7 +37,8 @@ let jmethod_to_java_method = jmethod =>
   | AbstractMethod(_) => failwith("sorry man, not abstract here")
   | ConcreteMethod(concrete_method) =>
     let signature = concrete_method.cm_signature;
-    let name = ms_name(signature);
+    let java_name = ms_name(signature);
+    let name = java_name;
     let static = concrete_method.cm_static;
     let variable_table =
       switch (concrete_method.cm_implementation) {
@@ -69,7 +70,7 @@ let jmethod_to_java_method = jmethod =>
       ms_rtype(signature)
       |> Option.map(value_type_to_java_type)
       |> Option.value(~default=Void);
-    Java_Method.{name, static, parameters, return_type};
+    Java_Method.{java_name, name, static, parameters, return_type};
   };
 let class_field_to_java_field = class_field => {
   let signature = class_field.cf_signature;

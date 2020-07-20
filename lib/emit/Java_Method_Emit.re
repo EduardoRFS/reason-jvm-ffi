@@ -52,12 +52,15 @@ let emit = (jni_class_name, t) => {
   // TODO: escape these names + jni_class_name
   let method_id = "jni_methodID";
 
-  let declare_method_id = {
-    let name = estring(t.name);
-    let signature = to_jvm_signature(t) |> estring;
-    %expr
-    Jni.get_methodID([%e evar(jni_class_name)], [%e name], [%e signature]);
-  };
+  let declare_method_id =
+    eapply(
+      [%expr Jni.get_methodID],
+      [
+        evar(jni_class_name),
+        estring(t.java_name),
+        to_jvm_signature(t) |> estring,
+      ],
+    );
   let declare_function = {
     let arguments = t.parameters |> List.map(emit_argument) |> pexp_array;
     let call =
