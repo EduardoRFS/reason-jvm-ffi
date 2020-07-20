@@ -103,14 +103,18 @@ let emit_type = (~is_unsafe=false, t) => {
         (Labelled(name), Java_Type_Emit.emit_type(value)),
       t.parameters,
     );
+  let parameters =
+    switch (parameters) {
+    | [] => [(Nolabel, typ_unit)]
+    | parameters => parameters
+    };
   let additional_parameter =
     switch (is_unsafe, t.static) {
     | (false, _) => []
     | (true, true) => [(Nolabel, [%type: Jni.clazz])]
     | (true, false) => [(Nolabel, [%type: Jni.obj])]
     };
-  let parameters = List.append(additional_parameter, parameters);
-  let parameters = [(Nolabel, typ_unit), ...parameters];
+  let parameters = List.append(parameters, additional_parameter);
 
   let return_type = Java_Type_Emit.emit_type(t.return_type);
   List.fold_left(
