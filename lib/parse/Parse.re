@@ -72,6 +72,21 @@ let jmethod_to_java_method = jmethod =>
       |> Option.value(~default=Void);
     Java_Method.{java_name, name, static, parameters, return_type};
   };
+let escape_duplicated_names = (compare, transform, list) =>
+  List.fold_left(
+    (new_list, item) => {
+      let has_duplicated = {
+        let occurrences = list |> List.filter(compare(item)) |> List.length;
+        occurrences >= 2;
+      };
+      let counter = new_list |> List.filter(compare(item)) |> List.length;
+      let item = has_duplicated ? transform(counter, item) : item;
+      [item, ...new_list];
+    },
+    [],
+    list,
+  );
+
 let class_field_to_java_field = class_field => {
   let signature = class_field.cf_signature;
   let name = fs_name(signature);
@@ -93,7 +108,16 @@ let jclass_to_java_class = jclass => {
          let java_method = jmethod_to_java_method(jmethod);
          // TODO: support constructors and static
          java_method.Java_Method.name == "<init>" ? None : Some(java_method);
-       });
+       })
+    |> escape_duplicated_names(
+         (method: Java_Method.t, method') =>
+           method.java_name == method'.java_name,
+         (index, method) =>
+           {
+             ...method,
+             name: method.java_name ++ "_" ++ string_of_int(index),
+           },
+       );
   Java_Class.{id, extends, fields, methods};
 };
 

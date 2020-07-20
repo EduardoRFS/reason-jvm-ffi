@@ -20,6 +20,7 @@ let make = (~packages=StringMap.empty, ~classes=StringMap.empty, name) => {
 let packages = t => StringMap.values(t.packages);
 let classes = t => StringMap.values(t.classes);
 // TODO: class and package with same name
+// maybe package should be Com_Github_Eduardorfs?
 // com.github.eduardorfs.Something
 // com.github.Eduardorfs
 

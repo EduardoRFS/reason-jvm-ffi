@@ -3,7 +3,7 @@ open Java_Type;
 open Java_Type_Emit;
 open Java_Class;
 
-// TODO: escape override method name
+// TODO: keep same method order as in the bytecode
 
 let jni_class_name = "unsafe_jni_class";
 let emit_method = Java_Method_Emit.emit(jni_class_name);
