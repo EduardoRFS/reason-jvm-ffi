@@ -50,7 +50,7 @@ let jmethod_to_java_method = jmethod =>
     let parameters =
       ms_args(signature)
       |> List.mapi((index, value_type) => {
-           // TODO: is that right for static functions?
+           // on non-static 0 is this, so that's why the offset
            let table_index = static ? index : index + 1;
            let name = {
              let.some (_, _, name, received_value_type, _) =
