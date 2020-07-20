@@ -181,17 +181,26 @@ let emit_unsafe_type = t => {
   let declare_methods = [%sigi:
     module Methods: {[%%s emit_methods_type(methods)];}
   ];
+  let java_fields =
+    t.fields
+    |> List.map(({Java_Field.name, _} as field) =>
+         pctf_method((
+           Located.mk(name),
+           Public,
+           Concrete,
+           Java_Field_Emit.emit_type(`Field, field),
+         ))
+       );
   let method_fields =
-    List.map(
-      ({Java_Method.name, _} as method) =>
-        pctf_method((
-          Located.mk(name),
-          Public,
-          Concrete,
-          Java_Method_Emit.emit_type(method),
-        )),
-      methods,
-    );
+    methods
+    |> List.map(({Java_Method.name, _} as method) =>
+         pctf_method((
+           Located.mk(name),
+           Public,
+           Concrete,
+           Java_Method_Emit.emit_type(method),
+         ))
+       );
   let inheritance_field = {
     let.some extends_id = t.extends;
     let extends_lid =
@@ -199,12 +208,13 @@ let emit_unsafe_type = t => {
     let extends = pcty_constr(extends_lid, []);
     Some(pctf_inherit(extends));
   };
-  let fields =
+  let class_fields =
     List.concat([
       List.filter_map(Fun.id, [inheritance_field]),
+      java_fields,
       method_fields,
     ]);
-  let class_signature = class_signature(~self=ptyp_any, ~fields);
+  let class_signature = class_signature(~self=ptyp_any, ~fields=class_fields);
   let class_fun =
     pcty_arrow(Nolabel, [%type: Jni.obj], pcty_signature(class_signature));
 
