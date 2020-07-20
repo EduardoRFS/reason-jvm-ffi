@@ -2,21 +2,34 @@ open Emit_Helper;
 open Java_Type;
 open Java_Field;
 
-let emit_field_access = (clazz_id, object_id, field_id, t) => {
-  let id_to_call = {
-    let type_name =
-      switch (t.kind) {
-      | Object(_)
-      | Array(_) => "object"
-      | java_type => Java_Type.to_code_name(java_type)
-      };
-    let function_name =
-      t.static
-        ? "get_static_" ++ type_name ++ "_field"
-        : "get_" ++ type_name ++ "_field";
-    evar(~modules=["Jni"], function_name);
+let emit_jni_field_access = (getter_or_setter, t) => {
+  let type_name =
+    switch (t.kind) {
+    | Object(_)
+    | Array(_) => "object"
+    | java_type => Java_Type.to_code_name(java_type)
+    };
+  let function_name =
+    switch (getter_or_setter, t.static) {
+    | (`Getter, true) => "get_static_" ++ type_name ++ "_field"
+    | (`Getter, false) => "get_" ++ type_name ++ "_field"
+    | (`Setter, true) => "set_static_" ++ type_name ++ "_field"
+    | (`Setter, false) => "set_" ++ type_name ++ "_field"
+    };
+  evar(~modules=["Jni"], function_name);
+};
+let emit_make_reference = (clazz_id, object_id, field_id, t) => {
+  let create_getter_or_setter = kind => {
+    let function_to_call = emit_jni_field_access(kind, t);
+    eapply(
+      function_to_call,
+      [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
+    );
   };
-  eapply(id_to_call, [t.static ? clazz_id : object_id, field_id]);
+  let getter = create_getter_or_setter(`Getter);
+  let getter = pexp_fun(Nolabel, None, punit, getter);
+  let setter = create_getter_or_setter(`Setter);
+  eapply([%expr Ref.make], [getter, setter]);
 };
 
 let object_id = "this";
@@ -33,24 +46,10 @@ let emit = (jni_class_name, t) => {
       ],
     );
   let declare_function = {
-    let field_access =
-      emit_field_access(
-        evar(jni_class_name),
-        evar(object_id),
-        evar(field_id),
-        t,
-      );
-    let parameters = [
-      (Nolabel, punit),
-      t.static
-        ? (Labelled(jni_class_name), pvar(jni_class_name))
-        : (Labelled(field_id), pvar(field_id)),
-    ];
-    List.fold_left(
-      (acc, (label, parameter)) => pexp_fun(label, None, parameter, acc),
-      field_access,
-      parameters,
-    );
+    let make_reference =
+      emit_make_reference(jni_class_name, object_id, field_id, t);
+    let parameter = t.static ? pvar(jni_class_name) : pvar(object_id);
+    pexp_fun(Nolabel, None, parameter, make_reference);
   };
   %expr
   {
