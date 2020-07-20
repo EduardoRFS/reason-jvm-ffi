@@ -3,7 +3,6 @@ open Java_Type;
 open Java_Type_Emit;
 open Java_Class;
 
-// TODO: class name to snake case
 // TODO: escape override method name
 
 let jni_class_name = "unsafe_jni_class";
