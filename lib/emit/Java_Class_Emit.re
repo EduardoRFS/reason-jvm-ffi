@@ -153,21 +153,32 @@ let emit_file = t => [%str
 
 // TODO: this is mostly duplicated code grr
 let emit_methods_type = methods =>
-  Java_Method.(
-    List.map(
-      method => {
-        let name = method.static ? method.name : unsafe_name(method.name);
-        let is_unsafe = !method.static;
-        value_description(
-          ~name=Located.mk(name),
-          ~type_=Java_Method_Emit.emit_type(~is_unsafe, method),
-          ~prim=[],
-        )
-        |> psig_value;
-      },
-      methods,
-    )
-  );
+  methods
+  |> List.map(method => {
+       open Java_Method;
+       let name = method.static ? method.name : unsafe_name(method.name);
+       let is_unsafe = !method.static;
+       value_description(
+         ~name=Located.mk(name),
+         ~type_=Java_Method_Emit.emit_type(~is_unsafe, method),
+         ~prim=[],
+       )
+       |> psig_value;
+     });
+
+let emit_fields_type = fields =>
+  fields
+  |> List.map(field => {
+       open Java_Field;
+       // TODO: duplicated code
+       let name = field.static ? field.name : unsafe_name(field.name);
+       value_description(
+         ~name=Located.mk(name),
+         ~type_=Java_Field_Emit.emit_type(`Unsafe, field),
+         ~prim=[],
+       )
+       |> psig_value;
+     });
 let emit_unsafe_type = t => {
   let jni_class_identifier =
     value_description(
@@ -176,6 +187,9 @@ let emit_unsafe_type = t => {
       ~prim=[],
     )
     |> psig_value;
+  let declare_fields = [%sigi:
+    module Fields: {[%%s emit_fields_type(t.fields)];}
+  ];
   let methods =
     List.filter(({Java_Method.static, _}) => !static, t.methods);
   let declare_methods = [%sigi:
@@ -227,7 +241,7 @@ let emit_unsafe_type = t => {
     );
   let content =
     List.append(
-      [jni_class_identifier, declare_methods],
+      [jni_class_identifier, declare_fields, declare_methods],
       [psig_class([class_declaration])],
     );
   [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
