@@ -9,7 +9,7 @@ type id = Object_Type.t;
 type t = {
   id,
   extends: option(id),
-  // TODO: fields
+  fields: list(Java_Field.t),
   methods: list(Java_Method.t),
 };
 

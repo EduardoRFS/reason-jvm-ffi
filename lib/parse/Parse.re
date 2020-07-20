@@ -71,9 +71,20 @@ let jmethod_to_java_method = jmethod =>
       |> Option.value(~default=Void);
     Java_Method.{name, static, parameters, return_type};
   };
+let class_field_to_java_field = class_field => {
+  let signature = class_field.cf_signature;
+  let name = fs_name(signature);
+  let static = class_field.cf_static;
+  let java_type = fs_type(signature) |> value_type_to_java_type;
+  Java_Field.{name, static, kind: java_type};
+};
 let jclass_to_java_class = jclass => {
   let id = class_name_to_object_type(jclass.c_name);
   let extends = jclass.c_super_class |> Option.map(class_name_to_object_type);
+  let fields =
+    jclass.c_fields
+    |> FieldMap.value_elements
+    |> List.map(class_field_to_java_field);
   let methods =
     jclass.c_methods
     |> MethodMap.value_elements
@@ -82,7 +93,7 @@ let jclass_to_java_class = jclass => {
          // TODO: support constructors and static
          java_method.Java_Method.name == "<init>" ? None : Some(java_method);
        });
-  Java_Class.{id, extends, methods};
+  Java_Class.{id, extends, fields, methods};
 };
 
 let create_env_and_package = (folder, classes) => {
