@@ -157,10 +157,10 @@ let emit_methods_type = methods =>
   |> List.map(method => {
        open Java_Method;
        let name = method.static ? method.name : unsafe_name(method.name);
-       let is_unsafe = !method.static;
+       let kind = method.static ? `Method : `Unsafe;
        value_description(
          ~name=Located.mk(name),
-         ~type_=Java_Method_Emit.emit_type(~is_unsafe, method),
+         ~type_=Java_Method_Emit.emit_type(kind, method),
          ~prim=[],
        )
        |> psig_value;
@@ -212,7 +212,7 @@ let emit_unsafe_type = t => {
            Located.mk(name),
            Public,
            Concrete,
-           Java_Method_Emit.emit_type(method),
+           Java_Method_Emit.emit_type(`Method, method),
          ))
        );
   let inheritance_field = {

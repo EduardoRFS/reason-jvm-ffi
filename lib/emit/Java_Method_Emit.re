@@ -95,8 +95,7 @@ let emit = (jni_class_name, t) => {
   };
 };
 
-// TODO: this API is weird
-let emit_type = (~is_unsafe=false, t) => {
+let emit_type = (kind, t) => {
   let parameters =
     List.rev_map(
       ((name, value)) =>
@@ -109,10 +108,10 @@ let emit_type = (~is_unsafe=false, t) => {
     | parameters => parameters
     };
   let additional_parameter =
-    switch (is_unsafe, t.static) {
-    | (false, _) => []
-    | (true, true) => [(Nolabel, [%type: Jni.clazz])]
-    | (true, false) => [(Nolabel, [%type: Jni.obj])]
+    switch (kind, t.static) {
+    | (`Method, _) => []
+    | (`Unsafe, true) => [(Nolabel, [%type: Jni.clazz])]
+    | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
     };
   let parameters = List.append(parameters, additional_parameter);
 
