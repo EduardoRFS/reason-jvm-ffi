@@ -58,19 +58,14 @@ let emit = (jni_class_name, t) => {
     declare_function;
   };
 };
-let emit_type = (~is_unsafe=false, jni_class_name, t) => {
-  let parameters = [
-    (Nolabel, typ_unit),
-    ...switch (is_unsafe, t.static) {
-       | (false, _) => []
-       | (true, true) => [(Labelled(jni_class_name), [%type: Jni.clazz])]
-       | (true, false) => [(Labelled(object_id), [%type: Jni.obj])]
-       },
-  ];
-  let return_type = Java_Type_Emit.emit_type(t.kind);
-  List.fold_left(
-    (typ, (label, parameter)) => ptyp_arrow(label, parameter, typ),
-    return_type,
-    parameters,
-  );
+let emit_type = (kind, t) => {
+  let content_type = Java_Type_Emit.emit_type(t.kind);
+  let rtype = ptyp_constr(Located.mk(lident("ref")), [content_type]);
+
+  switch (kind) {
+  | `Field => rtype
+  | `Unsafe =>
+    let make_type = t.static ? [%type: Jni.clazz] : [%type: Jni.obj];
+    ptyp_arrow(Nolabel, make_type, rtype);
+  };
 };
