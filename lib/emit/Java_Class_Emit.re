@@ -146,7 +146,7 @@ let emit_functor = t => {
   |> pstr_module;
 };
 let emit_file = t => [%str
-  open Camljava;
+  open JavaFFI;
   %s
   [emit_functor(t)]
 ];

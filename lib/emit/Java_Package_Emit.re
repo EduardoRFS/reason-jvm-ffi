@@ -40,7 +40,7 @@ let emit_alias_type = t =>
 let emit_file_type = (env, t) => {
   let packages = packages(t);
   let modules = packages |> List.map(emit_type(env));
-  [%sig: open Camljava; [%%s [psig_recmodule(modules)]]];
+  [%sig: open JavaFFI; [%%s [psig_recmodule(modules)]]];
 };
 
 let emit_file_classes = (env, t) => {
