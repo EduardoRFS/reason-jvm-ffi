@@ -179,7 +179,9 @@ let emit_unsafe_type = t => {
     |> psig_value;
   let methods =
     List.filter(({Java_Method.static, _}) => !static, t.methods);
-  let declare_methods = emit_methods_type(methods);
+  let declare_methods = [%sigi:
+    module Methods: {[%%s emit_methods_type(methods)];}
+  ];
   let method_fields =
     List.map(
       ({Java_Method.name, _} as method) =>
@@ -216,7 +218,7 @@ let emit_unsafe_type = t => {
     );
   let content =
     List.append(
-      [jni_class_identifier, ...declare_methods],
+      [jni_class_identifier, declare_methods],
       [psig_class([class_declaration])],
     );
   [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
