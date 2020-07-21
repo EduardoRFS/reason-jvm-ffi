@@ -43,6 +43,7 @@ type java_method = {
 // TODO: access
 [@deriving show]
 type java_class = {
+  java_name: class_name,
   name: class_name,
   extends: option(class_name),
   fields: list(java_field),
@@ -145,7 +146,7 @@ module Relativize = {
     let extends = Option.map(class_name(clazz_id), java_class.extends);
     let fields = java_class.fields |> List.map(java_field(clazz_id));
     let methods = java_class.methods |> List.map(java_method(clazz_id));
-    {name, extends, fields, methods};
+    {...java_class, name, extends, fields, methods};
   };
   let java_env = (clazz_id, env) => Java_Env.map(java_class(clazz_id), env);
 };

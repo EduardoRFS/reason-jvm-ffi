@@ -68,7 +68,8 @@ let emit_functor = t => {
   let content = [%str
     [@ocaml.warning "-33"]
     open Params;
-    [%s unsafe_module(Java_class_unsafe.emit(t))];
+    %s
+    [unsafe_module(Java_class_unsafe.emit(t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
@@ -76,7 +77,7 @@ let emit_functor = t => {
   ];
   let content = {
     let mod_constraint = {
-      let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.name);
+      let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.java_name);
       let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
       pmod_constraint(pmod_structure(content), mod_type);
     };

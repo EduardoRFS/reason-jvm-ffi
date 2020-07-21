@@ -103,7 +103,7 @@ let class_field_to_java_field = class_field => {
   {java_signature, name, static, kind: java_type};
 };
 let jclass_to_java_class = jclass => {
-  let name = class_name_to_object_type(jclass.c_name);
+  let java_name = class_name_to_object_type(jclass.c_name);
   let extends = jclass.c_super_class |> Option.map(class_name_to_object_type);
   let fields =
     jclass.c_fields
@@ -126,7 +126,7 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  {name, extends, fields, methods};
+  {java_name, name: java_name, extends, fields, methods};
 };
 
 let create_env_and_package = (folder, classes) => {

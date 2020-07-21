@@ -20,11 +20,6 @@ module Object_Type = {
     let package = id.package |> String.concat("/");
     package ++ "/" ++ id.name;
   };
-
-  /** so if you have a same package access it doesn't go through the full path */
-  let relativize = (clazz, t) => {
-    clazz.package == t.package ? {package: [], name: t.name} : t;
-  };
 };
 
 let rec to_code_name =
@@ -45,11 +40,3 @@ let find_required_class =
   fun
   | Object(object_type) => [object_type]
   | _ => [];
-
-let relativize = clazz =>
-  fun
-  | Object(object_type) => {
-      let object_type = Object_Type.relativize(clazz, object_type);
-      Object(object_type);
-    }
-  | java_type => java_type;
