@@ -1,7 +1,6 @@
 open Fun;
 open Emit_Helper;
 open Basic_types;
-open Java_Method;
 
 // TODO: should static have unsafe version without jclass applied?
 let emit_call = (clazz_id, object_id, method_id, args, t) => {
@@ -57,7 +56,7 @@ let emit = (jni_class_name, t) => {
       [
         eapply(evar(jni_class_name), [eunit]),
         estring(t.java_name),
-        to_jvm_signature(t) |> estring,
+        t.java_signature |> estring,
       ],
     );
   let declare_function = {
