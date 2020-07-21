@@ -1,18 +1,6 @@
-open Java_Type;
+open Basic_types;
 
 let (let.some) = Option.bind;
-
-[@deriving show]
-type id = Object_Type.t;
-
-[@deriving show]
-type t = {
-  id,
-  extends: option(id),
-  fields: list(Java_Field.t),
-  // TODO: maybe static should be separated?
-  methods: list(Java_Method.t),
-};
 
 let find_required_classes = t => {
   let extends =
@@ -23,5 +11,5 @@ let find_required_classes = t => {
   let methods =
     t.methods |> List.concat_map(Java_Method.find_required_classes);
   let requireds = extends @ methods;
-  requireds |> List.filter((!=)(t.id));
+  requireds |> List.filter((!=)(t.name));
 };

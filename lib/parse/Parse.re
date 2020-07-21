@@ -1,6 +1,5 @@
 open Reason_java_ffi_lib_emit;
-open Java_Type;
-open Object_Type;
+open Basic_types;
 
 open Javalib_pack;
 open JBasics;
@@ -14,7 +13,7 @@ let class_path = name => {
   class_path;
 };
 
-let class_name_to_object_type = class_name => {
+let class_name_to_object_type = (class_name): Basic_types.class_name => {
   package: cn_package(class_name),
   name: cn_simple_name(class_name),
 };
@@ -37,6 +36,7 @@ let jmethod_to_java_method = jmethod =>
   | AbstractMethod(_) => failwith("sorry man, not abstract here")
   | ConcreteMethod(concrete_method) =>
     let signature = concrete_method.cm_signature;
+
     let java_name = ms_name(signature);
     let static = concrete_method.cm_static;
     let variable_table =
@@ -71,8 +71,7 @@ let jmethod_to_java_method = jmethod =>
       |> Option.value(~default=Void);
     Java_Method.{
       java_name,
-      java_parameters,
-      java_return_type,
+      java_signature: JPrint.method_signature(~jvm=true, signature),
       name: java_name,
       static,
       parameters: java_parameters,
@@ -100,10 +99,10 @@ let class_field_to_java_field = class_field => {
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
-  Java_Field.{name, static, kind: java_type};
+  {name, static, kind: java_type};
 };
 let jclass_to_java_class = jclass => {
-  let id = class_name_to_object_type(jclass.c_name);
+  let name = class_name_to_object_type(jclass.c_name);
   let extends = jclass.c_super_class |> Option.map(class_name_to_object_type);
   let fields =
     jclass.c_fields
@@ -115,10 +114,10 @@ let jclass_to_java_class = jclass => {
     |> List.filter_map(jmethod => {
          let java_method = jmethod_to_java_method(jmethod);
          // TODO: support constructors and static
-         java_method.Java_Method.name == "<init>" ? None : Some(java_method);
+         java_method.name == "<init>" ? None : Some(java_method);
        })
     |> escape_duplicated_names(
-         (method: Java_Method.t, method') =>
+         (method: java_method, method') =>
            method.java_name == method'.java_name,
          (index, method) =>
            {
@@ -126,7 +125,7 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  Java_Class.{id, extends, fields, methods};
+  Java_Class.{name, extends, fields, methods};
 };
 
 let create_env_and_package = (folder, classes) => {
@@ -140,7 +139,7 @@ let create_env_and_package = (folder, classes) => {
          | JInterface(_) => failwith("currently not supported")
          | JClass(jclass) => {
              let java_class = jclass_to_java_class(jclass);
-             (java_class.Java_Class.id, java_class);
+             (java_class.name, java_class);
            },
        );
 

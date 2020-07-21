@@ -2,13 +2,14 @@ open Emit_Helper;
 open Java_Type;
 open Java_Type_Emit;
 open Java_Class;
+open Basic_types;
 
 // TODO: keep same method order as in the bytecode
 
 let get_methods_by_kind = t =>
   t.methods  // TODO: this clearly shouldn't be here
-  |> List.map(method => Java_Method.relativize(t.id, method))
-  |> List.partition((Java_Method.{static, _}) => static);
+  |> List.map(method => Java_Method.relativize(t.name, method))
+  |> List.partition(({static, _}) => static);
 
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
@@ -16,16 +17,14 @@ let object_id = "jni_jobj";
 let emit_field = Java_Field_Emit.emit(jni_class_name);
 let emit_fields = t =>
   t.fields
-  |> List.map(field => {
-       open Java_Field;
+  |> List.map((field: java_field) => {
        let name = unsafe_name(field.name);
        [%stri let [%p pvar(name)] = [%e emit_field(field)]];
      });
 let emit_method = Java_Method_Emit.emit(jni_class_name);
 let emit_methods = methods =>
   methods
-  |> List.map(method => {
-       open Java_Method;
+  |> List.map((method: java_method) => {
        let name = unsafe_name(method.name);
        [%stri let [%p pvar(name)] = [%e emit_method(method)]];
      });
@@ -35,7 +34,7 @@ let emit_unsafe_class = t => {
 
   let java_fields =
     t.fields
-    |> List.map(({Java_Field.name, _}) =>
+    |> List.map(({name, _}: java_field) =>
          pcf_method((
            Located.mk(name),
            Public,
@@ -50,7 +49,7 @@ let emit_unsafe_class = t => {
        );
   let method_fields =
     methods
-    |> List.map(({Java_Method.name, _}) =>
+    |> List.map(({name, _}: java_method) =>
          pcf_method((
            Located.mk(name),
            Public,
@@ -110,7 +109,7 @@ let emit_unsafe = t => {
   ];
 
   let find_class = {
-    let name = Object_Type.to_jvm_name(t.id) |> estring;
+    let name = Object_Type.to_jvm_name(t.name) |> estring;
     [%stri let [%p pvar(jni_class_name)] = () => Jni.find_class([%e name])];
   };
 
@@ -176,7 +175,7 @@ let emit_functor = t => {
   let (functions, _methods) = get_methods_by_kind(t);
   let static_methods =
     functions
-    |> List.map((Java_Method.{name, _}) => {
+    |> List.map(({name, _}: java_method) => {
          // TODO: please separate that
          let call =
            eapply(
@@ -227,13 +226,13 @@ let emit_functor = t => {
   ];
   let content = {
     let mod_constraint = {
-      let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.id);
+      let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.name);
       let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
       pmod_constraint(pmod_structure(content), mod_type);
     };
     let wrapper =
       module_binding(
-        ~name=Located.mk(Some(t.id.name)),
+        ~name=Located.mk(Some(t.name.name)),
         ~expr=mod_constraint,
       );
     pstr_recmodule([wrapper]);
@@ -254,8 +253,7 @@ let emit_file = t => [%str
 ];
 
 // TODO: this is mostly duplicated code grr
-let emit_method_type = (kind, method) => {
-  open Java_Method;
+let emit_method_type = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
   value_description(
     ~name=Located.mk(name),
@@ -269,8 +267,7 @@ let emit_methods_type = (kind, methods) =>
 
 let emit_fields_type = fields =>
   fields
-  |> List.map(field => {
-       open Java_Field;
+  |> List.map((field: java_field) => {
        // TODO: duplicated code
        let name = field.static ? field.name : unsafe_name(field.name);
        value_description(
@@ -294,7 +291,7 @@ let emit_unsafe_class_type = t => {
 
   let java_fields =
     t.fields
-    |> List.map(({Java_Field.name, _} as field) =>
+    |> List.map(({name, _} as field: java_field) =>
          pctf_method((
            Located.mk(name),
            Public,
@@ -304,7 +301,7 @@ let emit_unsafe_class_type = t => {
        );
   let method_fields =
     methods
-    |> List.map(({Java_Method.name, _} as method) =>
+    |> List.map(({name, _} as method: java_method) =>
          pctf_method((
            Located.mk(name),
            Public,
@@ -360,12 +357,12 @@ let emit_unsafe_type = t => {
 };
 let emit_module_type = t => {
   let static_methods =
-    List.filter(({Java_Method.static, _}) => static, t.methods);
+    List.filter(({static, _}: java_method) => static, t.methods);
   let static_methods = emit_methods_type(`Method, static_methods);
   let type_declaration = {
     let alias =
       ptyp_constr(
-        Located.mk(Java_Type_Emit.Object_Type_Emit.emit_unsafe_lid(t.id)),
+        Located.mk(Java_Type_Emit.Object_Type_Emit.emit_unsafe_lid(t.name)),
         [],
       );
     type_declaration(
@@ -384,7 +381,7 @@ let emit_module_type = t => {
       [psig_type(Recursive, [type_declaration])],
     ]);
   module_declaration(
-    ~name=Located.mk(Some(t.id.name)),
+    ~name=Located.mk(Some(t.name.name)),
     ~type_=pmty_signature(signature),
   );
 };

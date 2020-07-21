@@ -1,12 +1,9 @@
+open Basic_types;
+
 let (let.ok) = Result.bind;
 
 module Object_Type = {
-  // TODO: it's not only a type
-  [@deriving (show, eq, ord)]
-  type t = {
-    package: list(string),
-    name: string,
-  };
+  type t = Basic_types.class_name;
 
   let to_code_name = id =>
     List.append(id.package, [id.name]) |> String.concat(".");
@@ -34,21 +31,6 @@ module Object_Type = {
   };
 };
 
-[@deriving (show, eq, ord)]
-type t =
-  // TODO: void should probably be removed
-  | Void
-  | Boolean
-  | Byte
-  | Char
-  | Short
-  | Int
-  // TODO: maybe Camlint?
-  | Long
-  | Float
-  | Double
-  | Object(Object_Type.t)
-  | Array(t);
 let rec to_code_name =
   fun
   | Void => "void"

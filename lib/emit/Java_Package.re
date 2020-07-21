@@ -1,4 +1,5 @@
 open Java_Type;
+open Basic_types;
 
 module StringMap = {
   include Map.Make(String);
@@ -24,7 +25,7 @@ let classes = t => StringMap.values(t.classes);
 // com.github.eduardorfs.Something
 // com.github.Eduardorfs
 
-let add_to_package = ({Object_Type.package, _} as object_type, t) => {
+let add_to_package = ({package, _} as object_type, t) => {
   let rec add_internal = (t, parts) =>
     switch (parts) {
     | [] =>

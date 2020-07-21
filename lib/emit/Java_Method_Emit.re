@@ -1,7 +1,6 @@
 open Fun;
-open Java_Type;
 open Emit_Helper;
-
+open Basic_types;
 open Java_Method;
 
 // TODO: should static have unsafe version without jclass applied?

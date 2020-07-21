@@ -1,6 +1,7 @@
 open Emit_Helper;
-open Java_Type;
-open Java_Field;
+open Basic_types;
+
+type t = java_field;
 
 let emit_jni_field_access = (getter_or_setter, t) => {
   let type_name =
@@ -33,7 +34,7 @@ let emit_make_reference = (clazz_id, object_id, field_id, t) => {
 };
 
 let object_id = "this";
-let emit = (jni_class_name, t) => {
+let emit = (jni_class_name, t: t) => {
   // TODO: escape these names + jni_class_name
   let field_id = "jni_fieldID";
   let declare_field_id =

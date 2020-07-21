@@ -1,15 +1,4 @@
-// TODO: access
-[@deriving show]
-type t = {
-  // TODO: think on a better way to keep these copies
-  java_name: string,
-  java_parameters: list((string, Java_Type.t)),
-  java_return_type: Java_Type.t,
-  name: string,
-  static: bool,
-  parameters: list((string, Java_Type.t)),
-  return_type: Java_Type.t,
-};
+open Basic_types;
 
 let (let.ok) = Result.bind;
 
@@ -25,9 +14,9 @@ let to_jvm_signature = t => {
 let find_required_classes = t =>
   List.concat_map(
     ((_, java_type)) => Java_Type.find_required_class(java_type),
-    t.java_parameters,
+    t.parameters,
   )
-  @ Java_Type.find_required_class(t.java_return_type);
+  @ Java_Type.find_required_class(t.return_type);
 
 let relativize = (clazz, t) => {
   let relativize = Java_Type.relativize(clazz);
