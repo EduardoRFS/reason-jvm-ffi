@@ -27,5 +27,6 @@ let object_id = "jni_jobj";
 
 let emit_curried_method = method => {
   let modules = method.static ? ["Static"] : ["Methods"];
-  eapply(evar(~modules, unsafe_name(method.name)), [evar(object_id)]);
+  let arg = method.static ? evar(jni_class_name) : evar(object_id);
+  eapply(evar(~modules, unsafe_name(method.name)), [arg]);
 };
