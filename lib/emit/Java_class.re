@@ -19,7 +19,7 @@ let find_required_classes = t => {
 
 let get_methods_by_kind = t =>
   t.methods  // TODO: this clearly shouldn't be here
-  |> List.map(method => Java_Method.relativize(t.name, method))
+  |> List.map(method => Relativize.java_method(t.name, method))
   |> List.partition(({static, _}) => static);
 
 let jni_class_name = "unsafe_jni_class";

@@ -105,3 +105,28 @@ module Structures = {
     };
   };
 };
+
+/**
+  this is an optimization pass to make the access of values local
+*/
+module Relativize = {
+  /** so if you have a same package access it doesn't go through the full path */
+  let class_name = (clazz, t) => {
+    clazz.package == t.package ? {package: [], name: t.name} : t;
+  };
+  let java_type = clazz =>
+    fun
+    | Object(object_type) => {
+        let object_type = class_name(clazz, object_type);
+        Object(object_type);
+      }
+    | java_type => java_type;
+  let java_method = (clazz, t) => {
+    let relativize = java_type(clazz);
+    let parameters =
+      t.parameters
+      |> List.map(((name, value)) => (name, relativize(value)));
+    let return_type = relativize(t.return_type);
+    {...t, parameters, return_type};
+  };
+};
