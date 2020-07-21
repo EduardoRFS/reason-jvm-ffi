@@ -1,31 +1,19 @@
 open Emit_Helper;
 open Basic_types;
+open Basic_structures;
 
 type t = java_field;
 
-let emit_jni_field_access = (getter_or_setter, t) => {
-  let type_name =
-    switch (t.kind) {
-    | Object(_)
-    | Array(_) => "object"
-    | java_type => Java_Type.to_code_name(java_type)
-    };
-  let function_name =
-    switch (getter_or_setter, t.static) {
-    | (`Getter, true) => "get_static_" ++ type_name ++ "_field"
-    | (`Getter, false) => "get_" ++ type_name ++ "_field"
-    | (`Setter, true) => "set_static_" ++ type_name ++ "_field"
-    | (`Setter, false) => "set_" ++ type_name ++ "_field"
-    };
-  evar(~modules=["Jni"], function_name);
-};
+let emit_jni_field_access = (kind, t: java_field) =>
+  Java_Type_Emit.emit_camljava_jni_to_call(kind, t.static, t.kind);
 let emit_make_reference = (clazz_id, object_id, field_id, t) => {
   let create_getter_or_setter = kind => {
-    let function_to_call = emit_jni_field_access(kind, t);
-    eapply(
-      function_to_call,
-      [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
-    );
+    let returned_value =
+      eapply(
+        emit_jni_field_access(kind, t),
+        [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
+      );
+    unsafe_cast_returned_value(t.kind, returned_value);
   };
   let getter = create_getter_or_setter(`Getter);
   let getter = pexp_fun(Nolabel, None, punit, getter);
@@ -34,9 +22,10 @@ let emit_make_reference = (clazz_id, object_id, field_id, t) => {
 };
 
 let object_id = "this";
+// TODO: escape these names + jni_class_name
+let field_id = "jni_fieldID";
+
 let emit = (jni_class_name, t: t) => {
-  // TODO: escape these names + jni_class_name
-  let field_id = "jni_fieldID";
   let declare_field_id =
     eapply(
       [%expr Jni.get_fieldID],
@@ -50,7 +39,7 @@ let emit = (jni_class_name, t: t) => {
     let make_reference =
       emit_make_reference(jni_class_name, object_id, field_id, t);
     let parameter = t.static ? pvar(jni_class_name) : pvar(object_id);
-    pexp_fun(Nolabel, None, parameter, make_reference);
+    pexp_fun_helper([(Nolabel, parameter)], make_reference);
   };
   pexp_let_alias(field_id, declare_field_id, declare_function);
 };

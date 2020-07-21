@@ -43,31 +43,17 @@ let emit_argument = ((name, java_type)) => {
   };
 };
 
-// TODO: should static have unsafe version without jclass applied?
+let emit_jni_method_name = t =>
+  Java_Type_Emit.emit_camljava_jni_to_call(`Method, t.static, t.return_type);
 let emit_method_call = (clazz_id, object_id, method_id, args, t) => {
   let args = args |> List.map(emit_argument) |> pexp_array;
-  let id_to_call = {
-    let type_name =
-      switch (t.return_type) {
-      | Object(_)
-      | Array(_) => "object"
-      | java_type => Java_Type.to_code_name(java_type)
-      };
-    let function_name =
-      t.static
-        ? "call_static_" ++ type_name ++ "_method"
-        : "call_" ++ type_name ++ "_method";
-    evar(~modules=["Jni"], function_name);
-  };
   let returned_value =
-    eapply(id_to_call, [t.static ? clazz_id : object_id, method_id, args]);
+    eapply(
+      emit_jni_method_name(t),
+      [t.static ? clazz_id : object_id, method_id, args],
+    );
 
-  // TODO: should we trust the Java return? I have a bad feeling on that
-  switch (t.return_type) {
-  | Object(object_type) => new_unsafe_class(object_type, returned_value)
-  | Array(_) => failwith("TODO: too much work bro")
-  | _ => returned_value
-  };
+  unsafe_cast_returned_value(t.return_type, returned_value);
 };
 
 let object_id = "this";

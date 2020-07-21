@@ -39,7 +39,16 @@ let unsafe_class_lid = class_name =>
 
 let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
 
-let new_unsafe_class = (class_name, jobj) => {
+let unsafe_class_cast = (class_name, jobj) => {
   let new_fn = pexp_new(unsafe_class_lid(class_name) |> loc);
   eapply(new_fn, [jobj]);
+};
+
+// TODO: should we trust the Java return? I have a bad feeling on that
+let unsafe_cast_returned_value = (return_type, returned_value) => {
+  switch (return_type) {
+  | Object(class_name) => unsafe_class_cast(class_name, returned_value)
+  | Array(_) => failwith("TODO: too much work bro")
+  | _ => returned_value
+  };
 };

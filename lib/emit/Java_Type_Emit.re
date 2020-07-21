@@ -38,3 +38,22 @@ let rec emit_type =
   | Double => [%type: float]
   | Object(object_type) => Object_Type_Emit.emit_type(object_type)
   | Array(java_type) => [%type: list([%t emit_type(java_type)])];
+
+let emit_camljava_jni_to_call = (kind, static, t) => {
+  let type_name =
+    switch (t) {
+    | Object(_)
+    | Array(_) => "object"
+    | java_type => Java_Type.to_code_name(java_type)
+    };
+  let function_name =
+    switch (kind, static) {
+    | (`Method, true) => "call_static_" ++ type_name ++ "_method"
+    | (`Method, false) => "call_" ++ type_name ++ "_method"
+    | (`Getter, true) => "get_static_" ++ type_name ++ "_field"
+    | (`Getter, false) => "get_" ++ type_name ++ "_field"
+    | (`Setter, true) => "set_static_" ++ type_name ++ "_field"
+    | (`Setter, false) => "set_" ++ type_name ++ "_field"
+    };
+  evar(~modules=["Jni"], function_name);
+};
