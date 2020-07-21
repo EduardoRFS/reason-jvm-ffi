@@ -3,7 +3,7 @@ open Emit_Helper;
 open Java_Type;
 open Java_Type_Emit;
 open Java_class;
-open Basic_structures;
+open Structures;
 
 // TODO: duplicated
 let emit_method_type = (kind, method: java_method) => {

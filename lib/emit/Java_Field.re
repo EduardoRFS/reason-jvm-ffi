@@ -1,6 +1,6 @@
 open Emit_Helper;
 open Basic_types;
-open Basic_structures;
+open Structures;
 
 type t = java_field;
 

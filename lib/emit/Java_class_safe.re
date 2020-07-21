@@ -1,6 +1,6 @@
 open Emit_Helper;
 open Basic_types;
-open Basic_structures;
+open Structures;
 open Java_class;
 // TODO: keep same method order as in the bytecode
 

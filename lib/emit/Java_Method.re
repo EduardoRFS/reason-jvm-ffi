@@ -1,7 +1,7 @@
 open Fun;
 open Emit_Helper;
 open Basic_types;
-open Basic_structures;
+open Structures;
 
 let find_required_classes = t =>
   List.concat_map(
