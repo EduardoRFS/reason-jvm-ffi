@@ -77,7 +77,7 @@ let emit = (jni_class_name, t) => {
       t.static
         ? [(Nolabel, pvar(jni_class_name))]
         : [(Nolabel, pvar(object_id))];
-    List.append(parameters, additional_parameter);
+    List.append(additional_parameter, parameters);
   };
 
   let method_call =
@@ -118,7 +118,7 @@ let emit_type = (kind, t) => {
       | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
       | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
       };
-    List.append(parameters, additional_parameter);
+    List.append(additional_parameter, parameters);
   };
   let return_type = Java_Type_Emit.emit_type(t.return_type);
   ptyp_arrow_helper(parameters, return_type);
