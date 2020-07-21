@@ -223,16 +223,24 @@ let emit_functor = t => {
     %s
     safe_values
   ];
+  let content = {
+    let mod_constraint = {
+      let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.id);
+      let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
+      pmod_constraint(pmod_structure(content), mod_type);
+    };
+    let wrapper =
+      module_binding(
+        ~name=Located.mk(Some(t.id.name)),
+        ~expr=mod_constraint,
+      );
+    pstr_recmodule([wrapper]);
+  };
   // TODO: hardcoded Javatype
   let parameter =
     Named(Located.mk(Some("Params")), emit_functor_parameters_type(t));
   // useful to ensure the generated code complies with the type definition
-  let mod_constraint = {
-    let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.id);
-    let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
-    pmod_constraint(pmod_structure(content), mod_type);
-  };
-  let mod_functor = pmod_functor(parameter, mod_constraint);
+  let mod_functor = pmod_functor(parameter, pmod_structure([content]));
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
