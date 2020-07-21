@@ -52,17 +52,11 @@ let emit_class = t => {
        );
   let method_fields =
     methods
-    |> List.map(({name, _}: java_method) =>
+    |> List.map(({name, _} as method: java_method) =>
          pcf_method((
            Located.mk(name),
            Public,
-           Cfk_concrete(
-             Fresh,
-             eapply(
-               evar(~modules=["Methods"], unsafe_name(name)),
-               [evar(object_id)],
-             ),
-           ),
+           Cfk_concrete(Fresh, emit_curried_method(method)),
          ))
        );
   let inheritance_field = {

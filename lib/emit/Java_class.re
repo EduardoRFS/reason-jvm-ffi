@@ -1,3 +1,4 @@
+open Emit_Helper;
 open Basic_types;
 
 // TODO: keep same method order as in the bytecode
@@ -23,3 +24,8 @@ let get_methods_by_kind = t =>
 
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
+
+let emit_curried_method = method => {
+  let modules = method.static ? ["Static"] : ["Methods"];
+  eapply(evar(~modules, unsafe_name(method.name)), [evar(object_id)]);
+};

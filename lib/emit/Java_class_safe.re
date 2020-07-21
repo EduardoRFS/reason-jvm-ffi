@@ -57,15 +57,9 @@ let emit_functor = t => {
   let (functions, _methods) = get_methods_by_kind(t);
   let static_methods =
     functions
-    |> List.map(({name, _}: java_method) => {
-         // TODO: please separate that
-         let call =
-           eapply(
-             evar(~modules=["Static"], unsafe_name(name)),
-             [evar(jni_class_name)],
-           );
-         pstr_value_alias(name, call);
-       });
+    |> List.map((method: java_method) =>
+         pstr_value_alias(method.name, emit_curried_method(method))
+       );
 
   let type_value =
     pstr_type_alias("t", concat_lid([unsafe_module_lid, unsafe_lid("t")]));
