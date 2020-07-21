@@ -3,6 +3,7 @@ open Emit_Helper;
 open Java_Type;
 open Java_Type_Emit;
 open Java_class;
+open Basic_structures;
 
 // TODO: duplicated
 let emit_method_type = (kind, method: java_method) => {
@@ -212,5 +213,5 @@ let emit_type = t => {
     declare_functions,
     class_declaration,
   ];
-  [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
+  unsafe_module_type(content);
 };

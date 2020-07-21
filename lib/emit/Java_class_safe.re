@@ -1,5 +1,6 @@
 open Emit_Helper;
 open Basic_types;
+open Basic_structures;
 open Java_class;
 // TODO: keep same method order as in the bytecode
 
@@ -65,41 +66,15 @@ let emit_functor = t => {
            );
          [%stri let [%p pvar(name)] = [%e call]];
        });
-  // TODO: please stop duplicating module name
-  // TODO: please fix this shit code
+
   let type_value =
-    type_declaration(
-      ~name=Located.mk("t"),
-      ~params=[],
-      ~cstrs=[],
-      ~kind=Ptype_abstract,
-      ~private_=Public,
-      ~manifest=
-        Some(
-          ptyp_constr(
-            Ldot(
-              Ldot(Ldot(Lident("Unsafe"), "Please"), "Stop"),
-              "unsafe_t",
-            )
-            |> Located.mk,
-            [],
-          ),
-        ),
-    );
-  let type_value = pstr_type(Nonrecursive, [type_value]);
+    pstr_type_alias("t", concat_lid([unsafe_module_lid, unsafe_lid("t")]));
   let safe_values = [type_value, ...static_methods];
 
   let content = [%str
     [@ocaml.warning "-33"]
     open Params;
-    module Unsafe = {
-      module Please = {
-        module Stop = {
-          %s
-          Java_class_unsafe.emit(t);
-        };
-      };
-    };
+    [%s unsafe_module(Java_class_unsafe.emit(t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
@@ -167,7 +142,7 @@ let emit_module_type = t => {
   };
   let signature =
     List.concat([
-      Java_class_unsafe.emit_type(t),
+      [Java_class_unsafe.emit_type(t)],
       static_methods,
       [psig_type(Recursive, [type_declaration])],
     ]);

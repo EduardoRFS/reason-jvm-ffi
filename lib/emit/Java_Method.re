@@ -40,7 +40,7 @@ let emit_argument = ((name, java_type)) => {
   let identifier = evar(name);
   let read_expr =
     switch (java_type) {
-    | Object(_) => id([%expr [%e identifier]#get_jni_jobj])
+    | Object(_) => get_unsafe_jobj(identifier)
     | Array(_) => failwith("TODO: ")
     // | Array(_) => [%expr Jni.array_to_jobj([%e identifier])]
     | _ => identifier
