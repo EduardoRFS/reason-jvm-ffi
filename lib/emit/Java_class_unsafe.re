@@ -2,8 +2,7 @@ open Basic_types;
 open Emit_Helper;
 open Java_Type;
 open Java_Type_Emit;
-
-let (let.some) = Option.bind;
+open Java_class;
 
 // TODO: duplicated
 let emit_method_type = (kind, method: java_method) => {
@@ -17,15 +16,6 @@ let emit_method_type = (kind, method: java_method) => {
 };
 let emit_methods_type = (kind, methods) =>
   methods |> List.map(emit_method_type(kind));
-
-let jni_class_name = "unsafe_jni_class";
-let object_id = "jni_jobj";
-
-let get_methods_by_kind = t =>
-  t.methods  // TODO: this clearly shouldn't be here
-  |> List.map(method => Java_Method.relativize(t.name, method))
-  |> List.partition(({static, _}) => static);
-
 let emit_field = Java_Field.emit(jni_class_name);
 let emit_fields = t =>
   t.fields

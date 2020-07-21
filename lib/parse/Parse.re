@@ -126,7 +126,7 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  Java_Class.{name, extends, fields, methods};
+  {name, extends, fields, methods};
 };
 
 let create_env_and_package = (folder, classes) => {
