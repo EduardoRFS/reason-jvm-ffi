@@ -209,7 +209,7 @@ let emit_functor = t => {
 
   let content = [%str
     [@ocaml.warning "-33"]
-    open Javatype;
+    open Params;
     module Unsafe = {
       module Please = {
         module Stop = {
@@ -225,7 +225,7 @@ let emit_functor = t => {
   ];
   // TODO: hardcoded Javatype
   let parameter =
-    Named(Located.mk(Some("Javatype")), emit_functor_parameters_type(t));
+    Named(Located.mk(Some("Params")), emit_functor_parameters_type(t));
   // useful to ensure the generated code complies with the type definition
   let mod_constraint = {
     let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.id);
