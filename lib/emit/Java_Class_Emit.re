@@ -11,17 +11,22 @@ let get_methods_by_kind = t =>
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
+let emit_field = Java_Field_Emit.emit(jni_class_name);
+let emit_fields = t =>
+  t.fields
+  |> List.map(field => {
+       open Java_Field;
+       let name = unsafe_name(field.name);
+       [%stri let [%p pvar(name)] = [%e emit_field(field)]];
+     });
 let emit_method = Java_Method_Emit.emit(jni_class_name);
 let emit_methods = methods =>
-  Java_Method.(
-    List.map(
-      method => {
-        let name = unsafe_name(method.name);
-        [%stri let [%p pvar(name)] = [%e emit_method(method)]];
-      },
-      methods,
-    )
-  );
+  methods
+  |> List.map(method => {
+       open Java_Method;
+       let name = unsafe_name(method.name);
+       [%stri let [%p pvar(name)] = [%e emit_method(method)]];
+     });
 
 let emit_unsafe_class = t => {
   let (_functions, methods) = get_methods_by_kind(t);
@@ -63,6 +68,12 @@ let emit_unsafe_class = t => {
 
 let emit_unsafe = t => {
   let (functions, methods) = get_methods_by_kind(t);
+  let declare_fields = [%stri
+    module Fields = {
+      %s
+      emit_fields(t);
+    }
+  ];
   let declare_methods = [%stri
     module Methods = {
       %s
@@ -82,7 +93,13 @@ let emit_unsafe = t => {
   };
 
   let class_declaration = pstr_class([emit_unsafe_class(t)]);
-  [find_class, declare_methods, declare_functions, class_declaration];
+  [
+    find_class,
+    declare_fields,
+    declare_methods,
+    declare_functions,
+    class_declaration,
+  ];
 };
 let emit_functor_parameters_type = t => {
   // TODO: duplicated because mutually recursive
