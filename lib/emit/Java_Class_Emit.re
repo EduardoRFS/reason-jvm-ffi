@@ -174,6 +174,29 @@ let emit_functor = t => {
   let static_methods =
     List.filter(({Java_Method.static, _}) => static, t.methods);
   let static_methods = emit_methods(static_methods);
+  // TODO: please stop duplicating module name
+  // TODO: please fix this shit code
+  let type_value =
+    type_declaration(
+      ~name=Located.mk("t"),
+      ~params=[],
+      ~cstrs=[],
+      ~kind=Ptype_abstract,
+      ~private_=Public,
+      ~manifest=
+        Some(
+          ptyp_constr(
+            Ldot(
+              Ldot(Ldot(Lident("Unsafe"), "Please"), "Stop"),
+              "unsafe_t",
+            )
+            |> Located.mk,
+            [],
+          ),
+        ),
+    );
+  let type_value = pstr_type(Nonrecursive, [type_value]);
+  let safe_values = [type_value, ...static_methods];
 
   let content = [%str
     [@ocaml.warning "-33"]
@@ -189,7 +212,7 @@ let emit_functor = t => {
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
-    static_methods
+    safe_values
   ];
   // TODO: hardcoded Javatype
   let parameter =
