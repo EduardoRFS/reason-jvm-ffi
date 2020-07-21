@@ -96,10 +96,11 @@ let escape_duplicated_names = (compare, transform, list) =>
 
 let class_field_to_java_field = class_field => {
   let signature = class_field.cf_signature;
+  let java_signature = JPrint.field_signature(~jvm=true, signature);
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
-  {name, static, kind: java_type};
+  {java_signature, name, static, kind: java_type};
 };
 let jclass_to_java_class = jclass => {
   let name = class_name_to_object_type(jclass.c_name);

@@ -43,7 +43,7 @@ let emit = (jni_class_name, t: t) => {
       [
         eapply(evar(jni_class_name), [eunit]),
         estring(t.name),
-        estring(Java_Type.to_jvm_signature(t.kind)),
+        estring(t.java_signature),
       ],
     );
   let declare_function = {
