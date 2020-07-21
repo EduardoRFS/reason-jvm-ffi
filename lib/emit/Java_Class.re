@@ -22,5 +22,6 @@ let find_required_classes = t => {
     };
   let methods =
     t.methods |> List.concat_map(Java_Method.find_required_classes);
-  extends @ methods;
+  let requireds = extends @ methods;
+  requireds |> List.filter((!=)(t.id));
 };
