@@ -106,7 +106,7 @@ let emit = t => {
   ];
 
   let find_class = {
-    let name = Object_Type.to_jvm_name(t.name) |> estring;
+    let name = Object_Type.to_jvm_name(t.java_name) |> estring;
     pstr_value_alias(
       jni_class_name,
       [%expr () => Jni.find_class([%e name])],
