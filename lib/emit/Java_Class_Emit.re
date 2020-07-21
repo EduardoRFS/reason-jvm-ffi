@@ -5,7 +5,12 @@ open Java_Class;
 
 // TODO: keep same method order as in the bytecode
 
+let get_methods_by_kind = t =>
+  t.methods |> List.partition((Java_Method.{static, _}) => static);
+
 let jni_class_name = "unsafe_jni_class";
+let object_id = "jni_jobj";
+
 let emit_method = Java_Method_Emit.emit(jni_class_name);
 let emit_methods = methods =>
   Java_Method.(
@@ -17,25 +22,22 @@ let emit_methods = methods =>
       methods,
     )
   );
-let emit_unsafe = t => {
-  let object_id = "jni_jobj";
-  let methods =
-    List.filter(({Java_Method.static, _}) => !static, t.methods);
-  let declare_methods = emit_methods(methods);
+
+let emit_unsafe_class = t => {
+  let (_functions, methods) = get_methods_by_kind(t);
 
   let method_fields =
-    List.map(
-      ({Java_Method.name, _}) =>
-        pcf_method((
-          Located.mk(name),
-          Public,
-          Cfk_concrete(
-            Fresh,
-            eapply(evar(unsafe_name(name)), [evar(object_id)]),
-          ),
-        )),
-      methods,
-    );
+    methods
+    |> List.map(({Java_Method.name, _}) =>
+         pcf_method((
+           Located.mk(name),
+           Public,
+           Cfk_concrete(
+             Fresh,
+             eapply(evar(unsafe_name(name)), [evar(object_id)]),
+           ),
+         ))
+       );
   let inheritance_field = {
     let.some extends_id = t.extends;
     let extends_lid =
@@ -51,21 +53,25 @@ let emit_unsafe = t => {
     ]);
   let class_expr = class_structure(~self=ppat_any, ~fields) |> pcl_structure;
   let class_fun = pcl_fun(Nolabel, None, pvar(object_id), class_expr);
-  let class_declaration =
-    class_infos(
-      ~virt=Concrete,
-      ~params=[],
-      ~name=Located.mk(unsafe_t),
-      ~expr=class_fun // TODO: wait, class_infos without class_expr?
-    );
+  class_infos(
+    ~virt=Concrete,
+    ~params=[],
+    ~name=Located.mk(unsafe_t),
+    ~expr=class_fun // TODO: wait, class_infos without class_expr?
+  );
+};
+
+let emit_unsafe = t => {
+  let (_functions, methods) = get_methods_by_kind(t);
+  let declare_methods = emit_methods(methods);
+
   let find_class = {
     let name = Object_Type.to_jvm_name(t.id) |> estring;
     [%stri let [%p pvar(jni_class_name)] = Jni.find_class([%e name])];
   };
-  List.append(
-    [find_class, ...declare_methods],
-    [pstr_class([class_declaration])],
-  );
+
+  let class_declaration = pstr_class([emit_unsafe_class(t)]);
+  List.append([find_class, ...declare_methods], [class_declaration]);
 };
 let emit_functor_parameters_type = t => {
   // TODO: duplicated because mutually recursive
@@ -177,8 +183,7 @@ let emit_fields_type = fields =>
        )
        |> psig_value;
      });
-let get_methods_by_kind = t =>
-  t.methods |> List.partition((Java_Method.{static, _}) => static);
+
 let emit_unsafe_class_type = t => {
   let (_functions, methods) = get_methods_by_kind(t);
 
