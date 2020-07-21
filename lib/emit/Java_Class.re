@@ -27,7 +27,7 @@ let get_methods_by_kind = t =>
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
-let emit_field = Java_Field_Emit.emit(jni_class_name);
+let emit_field = Java_Field.emit(jni_class_name);
 let emit_fields = t =>
   t.fields
   |> List.map((field: java_field) => {
@@ -285,7 +285,7 @@ let emit_fields_type = fields =>
        let name = field.static ? field.name : unsafe_name(field.name);
        value_description(
          ~name=Located.mk(name),
-         ~type_=Java_Field_Emit.emit_type(`Unsafe, field),
+         ~type_=Java_Field.emit_type(`Unsafe, field),
          ~prim=[],
        )
        |> psig_value;
@@ -309,7 +309,7 @@ let emit_unsafe_class_type = t => {
            Located.mk(name),
            Public,
            Concrete,
-           Java_Field_Emit.emit_type(`Field, field),
+           Java_Field.emit_type(`Field, field),
          ))
        );
   let method_fields =
