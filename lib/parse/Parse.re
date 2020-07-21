@@ -38,7 +38,6 @@ let jmethod_to_java_method = jmethod =>
   | ConcreteMethod(concrete_method) =>
     let signature = concrete_method.cm_signature;
     let java_name = ms_name(signature);
-    let name = java_name;
     let static = concrete_method.cm_static;
     let variable_table =
       switch (concrete_method.cm_implementation) {
@@ -48,7 +47,7 @@ let jmethod_to_java_method = jmethod =>
         let jcode = Lazy.force(jcode);
         jcode.c_local_variable_table |> Option.value(~default=[]);
       };
-    let parameters =
+    let java_parameters =
       ms_args(signature)
       |> List.mapi((index, value_type) => {
            // on non-static 0 is this, so that's why the offset
@@ -66,11 +65,19 @@ let jmethod_to_java_method = jmethod =>
            let java_type = value_type_to_java_type(value_type);
            (name, java_type);
          });
-    let return_type =
+    let java_return_type =
       ms_rtype(signature)
       |> Option.map(value_type_to_java_type)
       |> Option.value(~default=Void);
-    Java_Method.{java_name, name, static, parameters, return_type};
+    Java_Method.{
+      java_name,
+      java_parameters,
+      java_return_type,
+      name: java_name,
+      static,
+      parameters: java_parameters,
+      return_type: java_return_type,
+    };
   };
 // TODO: methods and functions should be separated
 let escape_duplicated_names = (compare, transform, list) =>

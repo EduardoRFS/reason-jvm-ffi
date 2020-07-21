@@ -1,7 +1,10 @@
 // TODO: access
 [@deriving show]
 type t = {
+  // TODO: think on a better way to keep these copies
   java_name: string,
+  java_parameters: list((string, Java_Type.t)),
+  java_return_type: Java_Type.t,
   name: string,
   static: bool,
   parameters: list((string, Java_Type.t)),
