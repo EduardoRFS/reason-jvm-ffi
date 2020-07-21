@@ -1,4 +1,5 @@
 open Java_Package;
+open Basic_types;
 open Emit_Helper;
 
 let rec emit_package_type = (class_fn, t) => {

@@ -50,6 +50,12 @@ type java_class = {
   methods: list(java_method),
 };
 
+module Java_Env =
+  Map.Make({
+    type t = class_name;
+    let compare = compare_class_name;
+  });
+
 module Structures = {
   open Emit_Helper;
 
@@ -111,22 +117,35 @@ module Structures = {
 */
 module Relativize = {
   /** so if you have a same package access it doesn't go through the full path */
-  let class_name = (clazz, t) => {
-    clazz.package == t.package ? {package: [], name: t.name} : t;
+  let class_name = (clazz_id, class_name) => {
+    clazz_id.package == class_name.package
+      ? {package: [], name: class_name.name} : class_name;
   };
-  let java_type = clazz =>
+  let java_type = clazz_id =>
     fun
     | Object(object_type) => {
-        let object_type = class_name(clazz, object_type);
+        let object_type = class_name(clazz_id, object_type);
         Object(object_type);
       }
     | java_type => java_type;
-  let java_method = (clazz, t) => {
-    let relativize = java_type(clazz);
-    let parameters =
-      t.parameters
-      |> List.map(((name, value)) => (name, relativize(value)));
-    let return_type = relativize(t.return_type);
-    {...t, parameters, return_type};
+  let java_field = (clazz_id, field) => {
+    ...field,
+    kind: java_type(clazz_id, field.kind),
   };
+  let java_method = (clazz_id, method) => {
+    let relativize = java_type(clazz_id);
+    let parameters =
+      method.parameters
+      |> List.map(((name, value)) => (name, relativize(value)));
+    let return_type = relativize(method.return_type);
+    {...method, parameters, return_type};
+  };
+  let java_class = (clazz_id, java_class) => {
+    let name = class_name(clazz_id, java_class.name);
+    let extends = Option.map(class_name(clazz_id), java_class.extends);
+    let fields = java_class.fields |> List.map(java_field(clazz_id));
+    let methods = java_class.methods |> List.map(java_method(clazz_id));
+    {name, extends, fields, methods};
+  };
+  let java_env = (clazz_id, env) => Java_Env.map(java_class(clazz_id), env);
 };
