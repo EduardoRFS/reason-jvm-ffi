@@ -72,6 +72,7 @@ let jmethod_to_java_method = jmethod =>
       |> Option.value(~default=Void);
     Java_Method.{java_name, name, static, parameters, return_type};
   };
+// TODO: methods and functions should be separated
 let escape_duplicated_names = (compare, transform, list) =>
   List.fold_left(
     (new_list, item) => {

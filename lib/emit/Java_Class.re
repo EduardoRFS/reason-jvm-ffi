@@ -10,6 +10,7 @@ type t = {
   id,
   extends: option(id),
   fields: list(Java_Field.t),
+  // TODO: maybe static should be separated?
   methods: list(Java_Method.t),
 };
 

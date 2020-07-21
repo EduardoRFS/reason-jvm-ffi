@@ -151,19 +151,18 @@ let emit_file = t => [%str
 ];
 
 // TODO: this is mostly duplicated code grr
-let emit_methods_type = methods =>
-  methods
-  |> List.map(method => {
-       open Java_Method;
-       let name = method.static ? method.name : unsafe_name(method.name);
-       let kind = method.static ? `Method : `Unsafe;
-       value_description(
-         ~name=Located.mk(name),
-         ~type_=Java_Method_Emit.emit_type(kind, method),
-         ~prim=[],
-       )
-       |> psig_value;
-     });
+let emit_method_type = (kind, method) => {
+  open Java_Method;
+  let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
+  value_description(
+    ~name=Located.mk(name),
+    ~type_=Java_Method_Emit.emit_type(kind, method),
+    ~prim=[],
+  )
+  |> psig_value;
+};
+let emit_methods_type = (kind, methods) =>
+  methods |> List.map(emit_method_type(kind));
 
 let emit_fields_type = fields =>
   fields
@@ -239,9 +238,12 @@ let emit_unsafe_type = t => {
   let declare_fields = [%sigi:
     module Fields: {[%%s emit_fields_type(t.fields)];}
   ];
-  let (_functions, methods) = get_methods_by_kind(t);
+  let (functions, methods) = get_methods_by_kind(t);
   let declare_methods = [%sigi:
-    module Methods: {[%%s emit_methods_type(methods)];}
+    module Methods: {[%%s emit_methods_type(`Unsafe, methods)];}
+  ];
+  let declare_functions = [%sigi:
+    module Static: {[%%s emit_methods_type(`Unsafe, functions)];}
   ];
 
   let class_declaration = psig_class([emit_unsafe_class_type(t)]);
@@ -249,6 +251,7 @@ let emit_unsafe_type = t => {
     declare_jni_class,
     declare_fields,
     declare_methods,
+    declare_functions,
     class_declaration,
   ];
   [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
@@ -256,7 +259,7 @@ let emit_unsafe_type = t => {
 let emit_module_type = t => {
   let static_methods =
     List.filter(({Java_Method.static, _}) => static, t.methods);
-  let static_methods = emit_methods_type(static_methods);
+  let static_methods = emit_methods_type(`Method, static_methods);
   let type_declaration = {
     let alias =
       ptyp_constr(
