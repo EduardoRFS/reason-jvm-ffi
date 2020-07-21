@@ -72,16 +72,20 @@ let emit = (jni_class_name, t) => {
         t,
       );
 
+    // TODO: duplicated code between type and code
     let parameters =
       t.parameters
-      |> List.map(((name, _)) => (Labelled(name), pvar(name)));
-    let parameters = [
+      |> List.rev_map(((name, _)) => (Labelled(name), pvar(name)));
+    let parameters =
+      switch (parameters) {
+      | [] => [(Nolabel, punit)]
+      | parameters => parameters
+      };
+    let additional_parameter =
       t.static
-        ? (Labelled(jni_class_name), pvar(jni_class_name))
-        : (Labelled(object_id), pvar(object_id)),
-      ...parameters,
-    ];
-    let parameters = [(Nolabel, punit), ...List.rev(parameters)];
+        ? [(Nolabel, pvar(jni_class_name))]
+        : [(Nolabel, pvar(object_id))];
+    let parameters = List.append(parameters, additional_parameter);
 
     List.fold_left(
       (acc, (label, parameter)) => pexp_fun(label, None, parameter, acc),
@@ -100,11 +104,10 @@ let emit = (jni_class_name, t) => {
 
 let emit_type = (kind, t) => {
   let parameters =
-    List.rev_map(
-      ((name, value)) =>
-        (Labelled(name), Java_Type_Emit.emit_type(value)),
-      t.parameters,
-    );
+    t.parameters
+    |> List.rev_map(((name, value)) =>
+         (Labelled(name), Java_Type_Emit.emit_type(value))
+       );
   let parameters =
     switch (parameters) {
     | [] => [(Nolabel, typ_unit)]
