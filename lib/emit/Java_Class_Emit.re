@@ -194,12 +194,19 @@ let emit_functor = t => {
   // TODO: hardcoded Javatype
   let parameter =
     Named(Located.mk(Some("Javatype")), emit_functor_parameters_type(t));
-  let mod_functor = pmod_functor(parameter, pmod_structure(content));
+  // useful to ensure the generated code complies with the type definition
+  let mod_constraint = {
+    let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.id);
+    let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
+    pmod_constraint(pmod_structure(content), mod_type);
+  };
+  let mod_functor = pmod_functor(parameter, mod_constraint);
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
 let emit_file = t => [%str
   open JavaFFI;
+  open Javatype;
   %s
   [emit_functor(t)]
 ];

@@ -4,6 +4,7 @@ open Java_Type;
 module Object_Type_Emit = {
   open Object_Type;
 
+  // TODO: emit module type lid
   let emit_module_lid = id => {
     let last_module = String.capitalize_ascii(id.name);
     let modules = id.package |> List.map(String.capitalize_ascii);
