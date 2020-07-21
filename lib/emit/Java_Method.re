@@ -18,24 +18,6 @@ let relativize = (clazz, t) => {
   {...t, parameters, return_type};
 };
 
-// TODO: should static have unsafe version without jclass applied?
-let emit_call = (clazz_id, object_id, method_id, args, t) => {
-  let id_to_call = {
-    let type_name =
-      switch (t.return_type) {
-      | Object(_)
-      | Array(_) => "object"
-      | java_type => Java_Type.to_code_name(java_type)
-      };
-    let function_name =
-      t.static
-        ? "call_static_" ++ type_name ++ "_method"
-        : "call_" ++ type_name ++ "_method";
-    evar(~modules=["Jni"], function_name);
-  };
-  eapply(id_to_call, [t.static ? clazz_id : object_id, method_id, args]);
-};
-
 let emit_argument = ((name, java_type)) => {
   let identifier = evar(name);
   let read_expr =
@@ -61,40 +43,50 @@ let emit_argument = ((name, java_type)) => {
   };
 };
 
-let object_id = "this";
-let emit = (jni_class_name, t) => {
-  // TODO: escape these names + jni_class_name
-  let method_id = "jni_methodID";
-
-  let declare_method_id =
-    eapply(
-      [%expr Jni.get_methodID],
-      [
-        eapply(evar(jni_class_name), [eunit]),
-        estring(t.java_name),
-        t.java_signature |> estring,
-      ],
-    );
-  let declare_function = {
-    let arguments = t.parameters |> List.map(emit_argument) |> pexp_array;
-    let call =
-      emit_call(
-        // TODO: proper solve the problem of recursion + jni class
-        eapply(evar(jni_class_name), [eunit]),
-        evar(object_id),
-        evar(method_id),
-        arguments,
-        t,
-      );
-    // TODO: should we trust the Java return? I have a bad feeling on that
-    let body =
+// TODO: should static have unsafe version without jclass applied?
+let emit_method_call = (clazz_id, object_id, method_id, args, t) => {
+  let args = args |> List.map(emit_argument) |> pexp_array;
+  let id_to_call = {
+    let type_name =
       switch (t.return_type) {
-      | Object(object_type) => new_unsafe_class(object_type, call)
-      | Array(_) => failwith("TODO: too much work bro")
-      | _ => call
+      | Object(_)
+      | Array(_) => "object"
+      | java_type => Java_Type.to_code_name(java_type)
       };
+    let function_name =
+      t.static
+        ? "call_static_" ++ type_name ++ "_method"
+        : "call_" ++ type_name ++ "_method";
+    evar(~modules=["Jni"], function_name);
+  };
+  let returned_value =
+    eapply(id_to_call, [t.static ? clazz_id : object_id, method_id, args]);
 
-    // TODO: duplicated code between type and code
+  // TODO: should we trust the Java return? I have a bad feeling on that
+  switch (t.return_type) {
+  | Object(object_type) => new_unsafe_class(object_type, returned_value)
+  | Array(_) => failwith("TODO: too much work bro")
+  | _ => returned_value
+  };
+};
+
+let object_id = "this";
+// TODO: escape these names + jni_class_name
+let method_id = "jni_methodID";
+
+let emit_jni_get_methodID = (jni_class_name, t) =>
+  eapply(
+    [%expr Jni.get_methodID],
+    [
+      eapply(evar(jni_class_name), [eunit]),
+      estring(t.java_name),
+      t.java_signature |> estring,
+    ],
+  );
+
+let emit = (jni_class_name, t) => {
+  // TODO: duplicated code between type and code
+  let parameters = {
     let parameters =
       t.parameters
       |> List.rev_map(((name, _)) => (Labelled(name), pvar(name)));
@@ -107,41 +99,49 @@ let emit = (jni_class_name, t) => {
       t.static
         ? [(Nolabel, pvar(jni_class_name))]
         : [(Nolabel, pvar(object_id))];
-    let parameters = List.append(parameters, additional_parameter);
-
-    List.fold_left(
-      (acc, (label, parameter)) => pexp_fun(label, None, parameter, acc),
-      body,
-      parameters,
-    );
+    List.append(parameters, additional_parameter);
   };
 
-  pexp_let_alias(method_id, declare_method_id, declare_function);
+  let method_call =
+    emit_method_call(
+      // TODO: proper solve the problem of recursion + jni class
+      eapply(evar(jni_class_name), [eunit]),
+      evar(object_id),
+      evar(method_id),
+      t.parameters,
+      t,
+    );
+
+  // parameters => method_call
+  let declare_function = pexp_fun_helper(parameters, method_call);
+
+  pexp_let_alias(
+    method_id,
+    emit_jni_get_methodID(jni_class_name, t),
+    declare_function,
+  );
 };
 
 let emit_type = (kind, t) => {
-  let parameters =
-    t.parameters
-    |> List.rev_map(((name, value)) =>
-         (Labelled(name), Java_Type_Emit.emit_type(value))
-       );
-  let parameters =
-    switch (parameters) {
-    | [] => [(Nolabel, typ_unit)]
-    | parameters => parameters
-    };
-  let additional_parameter =
-    switch (kind, t.static) {
-    | (`Method, _) => []
-    | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
-    | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
-    };
-  let parameters = List.append(parameters, additional_parameter);
-
+  let parameters = {
+    let parameters =
+      t.parameters
+      |> List.rev_map(((name, value)) =>
+           (Labelled(name), Java_Type_Emit.emit_type(value))
+         );
+    let parameters =
+      switch (parameters) {
+      | [] => [(Nolabel, typ_unit)]
+      | parameters => parameters
+      };
+    let additional_parameter =
+      switch (kind, t.static) {
+      | (`Method, _) => []
+      | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
+      | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
+      };
+    List.append(parameters, additional_parameter);
+  };
   let return_type = Java_Type_Emit.emit_type(t.return_type);
-  List.fold_left(
-    (typ, (label, parameter)) => ptyp_arrow(label, parameter, typ),
-    return_type,
-    parameters,
-  );
+  ptyp_arrow_helper(parameters, return_type);
 };

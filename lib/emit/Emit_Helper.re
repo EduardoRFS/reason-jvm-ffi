@@ -43,3 +43,16 @@ let pexp_let_alias = (name, value, expr) => {
   let binding = value_binding(~pat=pvar(name), ~expr=value);
   pexp_let(Nonrecursive, [binding], expr);
 };
+
+let pexp_fun_helper = (args, ret) =>
+  List.fold_right(
+    ((label, arg), fn) => pexp_fun(label, None, arg, fn),
+    args,
+    ret,
+  );
+let ptyp_arrow_helper = (args, ret) =>
+  List.fold_right(
+    ((label, arg), fn) => ptyp_arrow(label, arg, fn),
+    args,
+    ret,
+  );
