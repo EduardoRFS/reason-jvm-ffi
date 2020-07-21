@@ -71,6 +71,20 @@ let emit = (jni_class_name, t) => {
         arguments,
         t,
       );
+    // TODO: should we trust the Java return? I have a bad feeling on that
+    let body =
+      switch (t.return_type) {
+      | Object(object_type) =>
+        pexp_apply(
+          pexp_new(
+            Java_Type_Emit.Object_Type_Emit.emit_unsafe_lid(object_type)
+            |> Located.mk,
+          ),
+          [(Nolabel, call)],
+        )
+      | Array(_) => failwith("TODO: too much work bro")
+      | _ => call
+      };
 
     // TODO: duplicated code between type and code
     let parameters =
@@ -89,7 +103,7 @@ let emit = (jni_class_name, t) => {
 
     List.fold_left(
       (acc, (label, parameter)) => pexp_fun(label, None, parameter, acc),
-      call,
+      body,
       parameters,
     );
   };
