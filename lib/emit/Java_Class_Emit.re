@@ -178,22 +178,19 @@ let emit_fields_type = fields =>
        )
        |> psig_value;
      });
-let emit_unsafe_type = t => {
-  let jni_class_identifier =
-    value_description(
-      ~name=Located.mk(jni_class_name),
-      ~type_=[%type: Jni.clazz],
-      ~prim=[],
-    )
-    |> psig_value;
-  let declare_fields = [%sigi:
-    module Fields: {[%%s emit_fields_type(t.fields)];}
-  ];
-  let methods =
-    List.filter(({Java_Method.static, _}) => !static, t.methods);
-  let declare_methods = [%sigi:
-    module Methods: {[%%s emit_methods_type(methods)];}
-  ];
+let get_methods_by_kind = t =>
+  t.methods |> List.partition((Java_Method.{static, _}) => static);
+let emit_unsafe_class_type = t => {
+  let (_functions, methods) = get_methods_by_kind(t);
+
+  let inheritance_field = {
+    let.some extends_id = t.extends;
+    let extends_lid =
+      Object_Type_Emit.emit_unsafe_lid(extends_id) |> Located.mk;
+    let extends = pcty_constr(extends_lid, []);
+    Some([pctf_inherit(extends)]);
+  };
+
   let java_fields =
     t.fields
     |> List.map(({Java_Field.name, _} as field) =>
@@ -214,16 +211,9 @@ let emit_unsafe_type = t => {
            Java_Method_Emit.emit_type(`Method, method),
          ))
        );
-  let inheritance_field = {
-    let.some extends_id = t.extends;
-    let extends_lid =
-      Object_Type_Emit.emit_unsafe_lid(extends_id) |> Located.mk;
-    let extends = pcty_constr(extends_lid, []);
-    Some(pctf_inherit(extends));
-  };
   let class_fields =
     List.concat([
-      List.filter_map(Fun.id, [inheritance_field]),
+      Option.value(~default=[], inheritance_field),
       java_fields,
       method_fields,
     ]);
@@ -231,18 +221,36 @@ let emit_unsafe_type = t => {
   let class_fun =
     pcty_arrow(Nolabel, [%type: Jni.obj], pcty_signature(class_signature));
 
-  let class_declaration =
-    class_infos(
-      ~virt=Concrete,
-      ~params=[],
-      ~name=Located.mk(unsafe_t),
-      ~expr=class_fun,
-    );
-  let content =
-    List.append(
-      [jni_class_identifier, declare_fields, declare_methods],
-      [psig_class([class_declaration])],
-    );
+  class_infos(
+    ~virt=Concrete,
+    ~params=[],
+    ~name=Located.mk(unsafe_t),
+    ~expr=class_fun,
+  );
+};
+let emit_unsafe_type = t => {
+  let declare_jni_class =
+    value_description(
+      ~name=Located.mk(jni_class_name),
+      ~type_=[%type: Jni.clazz],
+      ~prim=[],
+    )
+    |> psig_value;
+  let declare_fields = [%sigi:
+    module Fields: {[%%s emit_fields_type(t.fields)];}
+  ];
+  let (_functions, methods) = get_methods_by_kind(t);
+  let declare_methods = [%sigi:
+    module Methods: {[%%s emit_methods_type(methods)];}
+  ];
+
+  let class_declaration = psig_class([emit_unsafe_class_type(t)]);
+  let content = [
+    declare_jni_class,
+    declare_fields,
+    declare_methods,
+    class_declaration,
+  ];
   [%sig: module Unsafe: {module Please: {module Stop: {[%%s content];};};}];
 };
 let emit_module_type = t => {
