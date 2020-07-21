@@ -22,14 +22,14 @@ let emit_fields = t =>
   t.fields
   |> List.map((field: java_field) => {
        let name = unsafe_name(field.name);
-       [%stri let [%p pvar(name)] = [%e emit_field(field)]];
+       pstr_value_alias(name, emit_field(field));
      });
 let emit_method = Java_Method.emit(jni_class_name);
 let emit_methods = methods =>
   methods
   |> List.map((method: java_method) => {
        let name = unsafe_name(method.name);
-       [%stri let [%p pvar(name)] = [%e emit_method(method)]];
+       pstr_value_alias(name, emit_method(method));
      });
 
 let emit_class = t => {
@@ -113,7 +113,10 @@ let emit = t => {
 
   let find_class = {
     let name = Object_Type.to_jvm_name(t.name) |> estring;
-    [%stri let [%p pvar(jni_class_name)] = () => Jni.find_class([%e name])];
+    pstr_value_alias(
+      jni_class_name,
+      [%expr () => Jni.find_class([%e name])],
+    );
   };
 
   let class_declaration = pstr_class([emit_class(t)]);

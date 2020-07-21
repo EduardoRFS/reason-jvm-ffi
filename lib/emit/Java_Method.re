@@ -116,12 +116,7 @@ let emit = (jni_class_name, t) => {
     );
   };
 
-  %expr
-  {
-    let [%p pvar(method_id)] = [%e declare_method_id];
-    %e
-    declare_function;
-  };
+  pexp_let_alias(method_id, declare_method_id, declare_function);
 };
 
 let emit_type = (kind, t) => {

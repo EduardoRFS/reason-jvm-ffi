@@ -52,12 +52,7 @@ let emit = (jni_class_name, t: t) => {
     let parameter = t.static ? pvar(jni_class_name) : pvar(object_id);
     pexp_fun(Nolabel, None, parameter, make_reference);
   };
-  %expr
-  {
-    let [%p pvar(field_id)] = [%e declare_field_id];
-    %e
-    declare_function;
-  };
+  pexp_let_alias(field_id, declare_field_id, declare_function);
 };
 let emit_type = (kind, t) => {
   let content_type = Java_Type_Emit.emit_type(t.kind);

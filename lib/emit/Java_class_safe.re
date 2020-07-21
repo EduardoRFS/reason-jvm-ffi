@@ -64,7 +64,7 @@ let emit_functor = t => {
              evar(~modules=["Static"], unsafe_name(name)),
              [evar(jni_class_name)],
            );
-         [%stri let [%p pvar(name)] = [%e call]];
+         pstr_value_alias(name, call);
        });
 
   let type_value =

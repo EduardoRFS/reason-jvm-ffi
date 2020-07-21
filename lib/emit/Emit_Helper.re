@@ -34,3 +34,12 @@ let pstr_type_alias = (name, original_name) => {
     );
   pstr_type(Nonrecursive, [type_value]);
 };
+
+let pstr_value_alias = (name, expr) => {
+  let binding = value_binding(~pat=pvar(name), ~expr);
+  pstr_value(Nonrecursive, [binding]);
+};
+let pexp_let_alias = (name, value, expr) => {
+  let binding = value_binding(~pat=pvar(name), ~expr=value);
+  pexp_let(Nonrecursive, [binding], expr);
+};
