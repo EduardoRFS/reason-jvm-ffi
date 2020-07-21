@@ -31,6 +31,21 @@ let emit_methods = methods =>
 let emit_unsafe_class = t => {
   let (_functions, methods) = get_methods_by_kind(t);
 
+  let java_fields =
+    t.fields
+    |> List.map(({Java_Field.name, _}) =>
+         pcf_method((
+           Located.mk(name),
+           Public,
+           Cfk_concrete(
+             Fresh,
+             eapply(
+               evar(~modules=["Fields"], unsafe_name(name)),
+               [evar(object_id)],
+             ),
+           ),
+         ))
+       );
   let method_fields =
     methods
     |> List.map(({Java_Method.name, _}) =>
@@ -52,14 +67,16 @@ let emit_unsafe_class = t => {
       Object_Type_Emit.emit_unsafe_lid(extends_id) |> Located.mk;
     let extends = pcl_constr(extends_lid, []);
     let apply_class = pcl_apply(extends, [(Nolabel, evar(object_id))]);
-    Some(pcf_inherit(Fresh, apply_class, None));
+    Some([pcf_inherit(Fresh, apply_class, None)]);
   };
-  let fields =
+  let class_fields =
     List.concat([
-      List.filter_map(Fun.id, [inheritance_field]),
+      Option.value(~default=[], inheritance_field),
+      java_fields,
       method_fields,
     ]);
-  let class_expr = class_structure(~self=ppat_any, ~fields) |> pcl_structure;
+  let class_expr =
+    class_structure(~self=ppat_any, ~fields=class_fields) |> pcl_structure;
   let class_fun = pcl_fun(Nolabel, None, pvar(object_id), class_expr);
   class_infos(
     ~virt=Concrete,
