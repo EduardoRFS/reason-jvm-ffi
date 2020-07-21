@@ -1,6 +1,7 @@
 open Fun;
 open Emit_Helper;
 open Basic_types;
+open Basic_structures;
 
 let find_required_classes = t =>
   List.concat_map(
@@ -88,14 +89,7 @@ let emit = (jni_class_name, t) => {
     // TODO: should we trust the Java return? I have a bad feeling on that
     let body =
       switch (t.return_type) {
-      | Object(object_type) =>
-        pexp_apply(
-          pexp_new(
-            Java_Type_Emit.Object_Type_Emit.emit_unsafe_lid(object_type)
-            |> Located.mk,
-          ),
-          [(Nolabel, call)],
-        )
+      | Object(object_type) => new_unsafe_class(object_type, call)
       | Array(_) => failwith("TODO: too much work bro")
       | _ => call
       };
