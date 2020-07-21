@@ -27,6 +27,11 @@ module Object_Type = {
     let full_name = to_jvm_name(id);
     "L" ++ full_name ++ ";";
   };
+
+  /** so if you have a same package access it doesn't go through the full path */
+  let relativize = (clazz, t) => {
+    clazz.package == t.package ? {package: [], name: t.name} : t;
+  };
 };
 
 [@deriving (show, eq, ord)]
@@ -76,3 +81,11 @@ let find_required_class =
   fun
   | Object(object_type) => [object_type]
   | _ => [];
+
+let relativize = clazz =>
+  fun
+  | Object(object_type) => {
+      let object_type = Object_Type.relativize(clazz, object_type);
+      Object(object_type);
+    }
+  | java_type => java_type;

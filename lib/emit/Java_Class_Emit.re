@@ -6,7 +6,9 @@ open Java_Class;
 // TODO: keep same method order as in the bytecode
 
 let get_methods_by_kind = t =>
-  t.methods |> List.partition((Java_Method.{static, _}) => static);
+  t.methods  // TODO: this clearly shouldn't be here
+  |> List.map(method => Java_Method.relativize(t.id, method))
+  |> List.partition((Java_Method.{static, _}) => static);
 
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
