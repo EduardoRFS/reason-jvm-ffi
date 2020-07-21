@@ -63,15 +63,19 @@ let emit_unsafe_class = t => {
 
 let emit_unsafe = t => {
   let (_functions, methods) = get_methods_by_kind(t);
-  let declare_methods = emit_methods(methods);
-
+  let declare_methods = [%stri
+    module Methods = {
+      %s
+      emit_methods(methods);
+    }
+  ];
   let find_class = {
     let name = Object_Type.to_jvm_name(t.id) |> estring;
     [%stri let [%p pvar(jni_class_name)] = Jni.find_class([%e name])];
   };
 
   let class_declaration = pstr_class([emit_unsafe_class(t)]);
-  List.append([find_class, ...declare_methods], [class_declaration]);
+  [find_class, declare_methods, class_declaration];
 };
 let emit_functor_parameters_type = t => {
   // TODO: duplicated because mutually recursive
