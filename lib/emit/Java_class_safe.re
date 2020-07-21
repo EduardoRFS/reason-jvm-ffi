@@ -4,7 +4,7 @@ open Structures;
 open Java_class;
 // TODO: keep same method order as in the bytecode
 
-let emit_functor_parameters_type = t => {
+let emit_functor_parameters_type = (required_classes, self: java_class) => {
   // TODO: duplicated because mutually recursive
   let emit_alias_type = {
     let rec emit_package_type = (class_fn, t) => {
@@ -16,7 +16,11 @@ let emit_functor_parameters_type = t => {
            );
       let modules =
         // TODO: handle exception
-        t |> Java_Package.classes |> List.rev_map(class_fn);
+        t
+        |> Java_Package.classes
+        // filter here to ensure there is the package even if empty
+        |> List.filter((!=)(self.java_name))
+        |> List.rev_map(class_fn);
 
       let signature = List.append(packages, modules);
       module_declaration(
@@ -37,9 +41,10 @@ let emit_functor_parameters_type = t => {
       |> psig_module;
     });
   };
-  let required_classes = find_required_classes(t);
   let modules = {
     required_classes
+    // TODO: this is clearly hackish
+    @ [self.java_name]
     |> Java_Package.of_classes(".")
     // TODO: classes on default package???
     |> Java_Package.packages
@@ -53,7 +58,7 @@ let emit_functor_parameters_type = t => {
   ];
   pmty_signature([open_javatype, ...modules]);
 };
-let emit_functor = t => {
+let emit_functor = (required_class, t) => {
   let (functions, _methods) = get_methods_by_kind(t);
   let static_methods =
     functions
@@ -91,17 +96,19 @@ let emit_functor = t => {
   };
   // TODO: hardcoded Javatype
   let parameter =
-    Named(Located.mk(Some("Params")), emit_functor_parameters_type(t));
+    Named(
+      Located.mk(Some("Params")),
+      emit_functor_parameters_type(required_class, t),
+    );
   // useful to ensure the generated code complies with the type definition
   let mod_functor = pmod_functor(parameter, pmod_structure([content]));
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
-let emit_file = t => [%str
+let emit_file = (required_class, t) => [%str
   open JavaFFI;
-  open Javatype;
   %s
-  [emit_functor(t)]
+  [emit_functor(required_class, t)]
 ];
 
 // TODO: this is mostly duplicated code grr

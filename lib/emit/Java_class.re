@@ -13,8 +13,7 @@ let find_required_classes = t => {
     };
   let methods =
     t.methods |> List.concat_map(Java_Method.find_required_classes);
-  let requireds = extends @ methods;
-  requireds |> List.filter((!=)(t.name));
+  extends @ methods;
 };
 
 let get_methods_by_kind = t =>
