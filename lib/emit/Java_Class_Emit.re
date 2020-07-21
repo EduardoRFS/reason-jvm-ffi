@@ -16,7 +16,7 @@ let emit_methods = methods =>
   Java_Method.(
     List.map(
       method => {
-        let name = method.static ? method.name : unsafe_name(method.name);
+        let name = unsafe_name(method.name);
         [%stri let [%p pvar(name)] = [%e emit_method(method)]];
       },
       methods,
@@ -62,20 +62,27 @@ let emit_unsafe_class = t => {
 };
 
 let emit_unsafe = t => {
-  let (_functions, methods) = get_methods_by_kind(t);
+  let (functions, methods) = get_methods_by_kind(t);
   let declare_methods = [%stri
     module Methods = {
       %s
       emit_methods(methods);
     }
   ];
+  let declare_functions = [%stri
+    module Static = {
+      %s
+      emit_methods(functions);
+    }
+  ];
+
   let find_class = {
     let name = Object_Type.to_jvm_name(t.id) |> estring;
     [%stri let [%p pvar(jni_class_name)] = Jni.find_class([%e name])];
   };
 
   let class_declaration = pstr_class([emit_unsafe_class(t)]);
-  [find_class, declare_methods, class_declaration];
+  [find_class, declare_methods, declare_functions, class_declaration];
 };
 let emit_functor_parameters_type = t => {
   // TODO: duplicated because mutually recursive
