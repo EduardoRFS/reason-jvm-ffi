@@ -64,18 +64,17 @@ module Structures = {
   let concat_lid = lids =>
     lids |> List.map(Longident.name) |> String.concat(".") |> Longident.parse;
 
-  let class_lid = ({name, package}) => {
-    let (first_name, remaining_path) =
-      switch (package) {
-      | [] => (name, [])
-      | [first_name, ...remaining] => (
-          first_name,
-          List.append(remaining, [name]),
-        )
-      };
-    remaining_path
-    |> List.fold_left((lid, name) => Ldot(lid, name), Lident(first_name));
-  };
+  // TODO: do this properly, what if package is empty?
+  let package_lid = package =>
+    package
+    |> List.map(String.capitalize_ascii)
+    |> String.concat(".")
+    |> Longident.parse;
+  let class_lid = ({name, package}) =>
+    concat_lid(
+      package == []
+        ? [Lident(name)] : [package_lid(package), Lident(name)],
+    );
 
   let unsafe_name = name => "unsafe_" ++ name;
   let unsafe_lid = name => Lident(unsafe_name(name));

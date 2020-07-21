@@ -65,11 +65,12 @@ let emit_functor = t => {
     pstr_type_alias("t", concat_lid([unsafe_module_lid, unsafe_lid("t")]));
   let safe_values = [type_value, ...static_methods];
 
+  let open_package = pstr_open_alias(package_lid(t.java_name.package));
   let content = [%str
     [@ocaml.warning "-33"]
     open Params;
     %s
-    [unsafe_module(Java_class_unsafe.emit(t))];
+    [open_package, unsafe_module(Java_class_unsafe.emit(t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s

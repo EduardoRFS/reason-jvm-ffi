@@ -56,3 +56,19 @@ let ptyp_arrow_helper = (args, ret) =>
     args,
     ret,
   );
+
+let change_warning = number => {
+  let expr = estring(string_of_int(number));
+  let payload = PStr([pstr_eval(expr, [])]);
+  attribute(~name=loc("ocaml.warning"), ~payload);
+};
+let pstr_open_alias = (~warning=false, ~override=Fresh, lid) => {
+  let ident = pmod_ident(loc(lid));
+  let info = {
+    popen_expr: ident,
+    popen_override: override,
+    popen_loc: Ast_builder.loc,
+    popen_attributes: warning ? [] : [change_warning(-33)],
+  };
+  pstr_open(info);
+};
