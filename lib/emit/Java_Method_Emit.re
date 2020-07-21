@@ -56,7 +56,7 @@ let emit = (jni_class_name, t) => {
     eapply(
       [%expr Jni.get_methodID],
       [
-        evar(jni_class_name),
+        eapply(evar(jni_class_name), [eunit]),
         estring(t.java_name),
         to_jvm_signature(t) |> estring,
       ],
@@ -65,7 +65,8 @@ let emit = (jni_class_name, t) => {
     let arguments = t.parameters |> List.map(emit_argument) |> pexp_array;
     let call =
       emit_call(
-        evar(jni_class_name),
+        // TODO: proper solve the problem of recursion + jni class
+        eapply(evar(jni_class_name), [eunit]),
         evar(object_id),
         evar(method_id),
         arguments,
@@ -130,7 +131,7 @@ let emit_type = (kind, t) => {
   let additional_parameter =
     switch (kind, t.static) {
     | (`Method, _) => []
-    | (`Unsafe, true) => [(Nolabel, [%type: Jni.clazz])]
+    | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
     | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
     };
   let parameters = List.append(parameters, additional_parameter);

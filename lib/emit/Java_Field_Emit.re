@@ -40,7 +40,7 @@ let emit = (jni_class_name, t) => {
     eapply(
       [%expr Jni.get_fieldID],
       [
-        evar(jni_class_name),
+        eapply(evar(jni_class_name), [eunit]),
         estring(t.name),
         estring(Java_Type.to_jvm_signature(t.kind)),
       ],
@@ -65,7 +65,7 @@ let emit_type = (kind, t) => {
   switch (kind) {
   | `Field => rtype
   | `Unsafe =>
-    let make_type = t.static ? [%type: Jni.clazz] : [%type: Jni.obj];
+    let make_type = t.static ? [%type: unit => Jni.clazz] : [%type: Jni.obj];
     ptyp_arrow(Nolabel, make_type, rtype);
   };
 };
