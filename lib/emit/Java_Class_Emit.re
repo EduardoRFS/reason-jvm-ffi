@@ -171,9 +171,18 @@ let emit_functor_parameters_type = t => {
   pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = t => {
+  let (functions, _methods) = get_methods_by_kind(t);
   let static_methods =
-    List.filter(({Java_Method.static, _}) => static, t.methods);
-  let static_methods = emit_methods(static_methods);
+    functions
+    |> List.map((Java_Method.{name, _}) => {
+         // TODO: please separate that
+         let call =
+           eapply(
+             evar(~modules=["Static"], unsafe_name(name)),
+             [evar(jni_class_name)],
+           );
+         [%stri let [%p pvar(name)] = [%e call]];
+       });
   // TODO: please stop duplicating module name
   // TODO: please fix this shit code
   let type_value =
