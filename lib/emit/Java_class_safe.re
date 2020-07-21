@@ -84,6 +84,7 @@ let emit_functor = (required_class, t) => {
   let content = {
     let mod_constraint = {
       let lid = Java_Type_Emit.Object_Type_Emit.emit_module_lid(t.java_name);
+      let lid = concat_lid([Lident("Javatype"), lid]);
       let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
       pmod_constraint(pmod_structure(content), mod_type);
     };
