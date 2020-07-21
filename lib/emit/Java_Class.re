@@ -34,7 +34,7 @@ let emit_fields = t =>
        let name = unsafe_name(field.name);
        [%stri let [%p pvar(name)] = [%e emit_field(field)]];
      });
-let emit_method = Java_Method_Emit.emit(jni_class_name);
+let emit_method = Java_Method.emit(jni_class_name);
 let emit_methods = methods =>
   methods
   |> List.map((method: java_method) => {
@@ -270,7 +270,7 @@ let emit_method_type = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
   value_description(
     ~name=Located.mk(name),
-    ~type_=Java_Method_Emit.emit_type(kind, method),
+    ~type_=Java_Method.emit_type(kind, method),
     ~prim=[],
   )
   |> psig_value;
@@ -319,7 +319,7 @@ let emit_unsafe_class_type = t => {
            Located.mk(name),
            Public,
            Concrete,
-           Java_Method_Emit.emit_type(`Method, method),
+           Java_Method.emit_type(`Method, method),
          ))
        );
   let class_fields =
