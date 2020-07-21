@@ -39,7 +39,10 @@ let emit_unsafe_class = t => {
            Public,
            Cfk_concrete(
              Fresh,
-             eapply(evar(unsafe_name(name)), [evar(object_id)]),
+             eapply(
+               evar(~modules=["Methods"], unsafe_name(name)),
+               [evar(object_id)],
+             ),
            ),
          ))
        );
