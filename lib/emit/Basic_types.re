@@ -203,4 +203,13 @@ module Env = {
     };
   };
   let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
+
+  let find_lid = (f, class_name, name, t) => {
+    let value = t |> find(class_name);
+    f(value) |> StringMap.find(name);
+  };
+  let field_lid = find_lid(value => value.env_fields);
+  let constructor_lid = find_lid(value => value.env_constructors);
+  let method_lid = find_lid(value => value.env_methods);
+  let function_lid = find_lid(value => value.env_fields);
 };
