@@ -58,47 +58,6 @@ module Java_Env =
     let compare = compare_class_name;
   });
 
-module Env = {
-  module StringMap = Map.Make(String);
-  include Map.Make({
-    type t = class_name;
-    let compare = compare_class_name;
-  });
-
-  type value = {
-    env_unsafe_class: Longident.t,
-    env_jni_class: Longident.t,
-    env_fields: StringMap.t(Longident.t),
-    env_constructors: StringMap.t(Longident.t),
-    env_methods: StringMap.t(Longident.t),
-    env_functions: StringMap.t(Longident.t),
-  };
-
-  let rec sub_lid = (a, b) =>
-    Longident.(
-      switch (a, b) {
-      | (Ldot(content, name), Lident(b_name)) when name == b_name => content
-      | (Ldot(content, name), Ldot(b_content, b_name)) when name == b_name =>
-        sub_lid(content, b_content)
-      | (a, _) => a
-      }
-    );
-
-  let open_lid_value = (to_open, value) => {
-    let sub_lid = a => sub_lid(a, to_open);
-    let sub_lid_map = str_map => str_map |> StringMap.map(sub_lid);
-    {
-      env_unsafe_class: sub_lid(value.env_unsafe_class),
-      env_jni_class: sub_lid(value.env_jni_class),
-      env_fields: sub_lid_map(value.env_fields),
-      env_constructors: sub_lid_map(value.env_constructors),
-      env_methods: sub_lid_map(value.env_methods),
-      env_functions: sub_lid_map(value.env_functions),
-    };
-  };
-  let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
-};
-
 module Structures = {
   open Emit_Helper;
 
@@ -161,4 +120,67 @@ module Structures = {
     | _ => returned_value
     };
   };
+};
+
+module Env = {
+  module StringMap = Map.Make(String);
+  include Map.Make({
+    type t = class_name;
+    let compare = compare_class_name;
+  });
+
+  type value = {
+    env_unsafe_class: Longident.t,
+    env_jni_class: Longident.t,
+    env_fields: StringMap.t(Longident.t),
+    env_constructors: StringMap.t(Longident.t),
+    env_methods: StringMap.t(Longident.t),
+    env_functions: StringMap.t(Longident.t),
+  };
+
+  let add_class =
+      (
+        ~fields=StringMap.empty,
+        ~constructors=StringMap.empty,
+        ~methods=StringMap.empty,
+        ~functions=StringMap.empty,
+        class_name,
+        lid,
+      ) => {
+    open Structures;
+    let unsafe_class = concat_lid([lid, unsafe_lid("unsafe_t")]);
+    let unsafe_jni_clazz = concat_lid([lid, unsafe_lid("unsafe_jni_clazz")]);
+    let value = {
+      env_unsafe_class: unsafe_class,
+      env_jni_class: unsafe_jni_clazz,
+      env_fields: fields,
+      env_constructors: constructors,
+      env_methods: methods,
+      env_functions: functions,
+    };
+    add(class_name, value);
+  };
+  let rec sub_lid = (a, b) =>
+    Longident.(
+      switch (a, b) {
+      | (Ldot(content, name), Lident(b_name)) when name == b_name => content
+      | (Ldot(content, name), Ldot(b_content, b_name)) when name == b_name =>
+        sub_lid(content, b_content)
+      | (a, _) => a
+      }
+    );
+
+  let open_lid_value = (to_open, value) => {
+    let sub_lid = a => sub_lid(a, to_open);
+    let sub_lid_map = str_map => str_map |> StringMap.map(sub_lid);
+    {
+      env_unsafe_class: sub_lid(value.env_unsafe_class),
+      env_jni_class: sub_lid(value.env_jni_class),
+      env_fields: sub_lid_map(value.env_fields),
+      env_constructors: sub_lid_map(value.env_constructors),
+      env_methods: sub_lid_map(value.env_methods),
+      env_functions: sub_lid_map(value.env_functions),
+    };
+  };
+  let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
 };
