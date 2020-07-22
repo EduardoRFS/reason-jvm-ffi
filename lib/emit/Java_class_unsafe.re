@@ -23,6 +23,7 @@ let emit_fields = t =>
        let name = unsafe_name(field.name);
        pstr_value_alias(name, emit_field(field));
      });
+
 let emit_method = Java_Method.emit(jni_class_name);
 let emit_methods = methods =>
   methods
@@ -144,7 +145,7 @@ let emit_class_functor_parameters_type = t => {
     let.some extends = t.extends;
     let parent_name = extends.name;
     let parent_type_module =
-      concat_lid([unsafe_module_type_lid(extends), Lident("Class")]);
+      concat_lid([class_lid(extends), unsafe_module_lid, Lident("Class")]);
     Some([psig_module_alias_module(parent_name, parent_type_module)]);
   };
   let fields =
@@ -168,7 +169,8 @@ let emit_class_functor = t => {
       emit_class_functor_parameters_type(t),
     );
   // useful to ensure the generated code complies with the type definition
-  let mod_functor = pmod_functor(parameter, pmod_structure([content]));
+  let mod_functor =
+    pmod_functor(parameter, pmod_structure([[%stri open Params], content]));
   module_binding(~name=Located.mk(Some("Class")), ~expr=mod_functor)
   |> pstr_module;
 };

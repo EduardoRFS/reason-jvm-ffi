@@ -3,6 +3,8 @@ open Emit_Helper;
 open Basic_types;
 open Structures;
 
+let is_static = t => t.kind == `Function;
+
 let find_required_classes = t =>
   List.concat_map(
     ((_, java_type)) => Java_Type.find_required_class(java_type),
@@ -36,13 +38,17 @@ let emit_argument = ((name, java_type)) => {
 };
 
 let emit_jni_method_name = t =>
-  Java_Type_Emit.emit_camljava_jni_to_call(`Method, t.static, t.return_type);
-let emit_method_call = (clazz_id, object_id, method_id, args, t) => {
+  Java_Type_Emit.emit_camljava_jni_to_call(
+    `Method,
+    t.kind == `Function,
+    t.return_type,
+  );
+let emit_method_call = (clazz_id, object_id, method_id, args, t: java_method) => {
   let args = args |> List.map(emit_argument) |> pexp_array;
   let returned_value =
     eapply(
       emit_jni_method_name(t),
-      [t.static ? clazz_id : object_id, method_id, args],
+      [is_static(t) ? clazz_id : object_id, method_id, args],
     );
 
   unsafe_cast_returned_value(t.return_type, returned_value);
@@ -54,7 +60,7 @@ let method_id = "jni_methodID";
 
 let emit_jni_get_methodID = (jni_class_name, t: java_method) =>
   eapply(
-    t.static ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
+    is_static(t) ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
     [
       eapply(evar(jni_class_name), [eunit]),
       estring(t.java_name),
@@ -74,7 +80,7 @@ let emit = (jni_class_name, t) => {
       | parameters => parameters
       };
     let additional_parameter =
-      t.static
+      is_static(t)
         ? [(Nolabel, pvar(jni_class_name))]
         : [(Nolabel, pvar(object_id))];
     List.append(additional_parameter, parameters);
@@ -113,7 +119,7 @@ let emit_type = (kind, t) => {
       | parameters => parameters
       };
     let additional_parameter =
-      switch (kind, t.static) {
+      switch (kind, is_static(t)) {
       | (`Method, _) => []
       | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
       | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]

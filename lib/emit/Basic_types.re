@@ -26,7 +26,7 @@ type java_field = {
   java_signature: string,
   name: string,
   static: bool,
-  kind: java_type,
+  type_: java_type,
 };
 
 // TODO: access
@@ -35,7 +35,7 @@ type java_method = {
   java_name: string,
   java_signature: string,
   name: string,
-  static: bool,
+  kind: [ | `Constructor | `Method | `Function],
   parameters: list((string, java_type)),
   return_type: java_type,
 };
@@ -47,7 +47,6 @@ type java_class = {
   name: class_name,
   extends: option(class_name),
   fields: list(java_field),
-  constructors: list(java_method),
   methods: list(java_method),
 };
 
@@ -140,7 +139,7 @@ module Relativize = {
     | java_type => java_type;
   let java_field = (clazz_id, field) => {
     ...field,
-    kind: java_type(clazz_id, field.kind),
+    type_: java_type(clazz_id, field.type_),
   };
   let java_method = (clazz_id, method) => {
     let relativize = java_type(clazz_id);

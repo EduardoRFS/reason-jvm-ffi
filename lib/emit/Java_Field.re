@@ -5,7 +5,7 @@ open Structures;
 type t = java_field;
 
 let emit_jni_field_access = (kind, t: java_field) =>
-  Java_Type_Emit.emit_camljava_jni_to_call(kind, t.static, t.kind);
+  Java_Type_Emit.emit_camljava_jni_to_call(kind, t.static, t.type_);
 let emit_make_reference = (clazz_id, object_id, field_id, t) => {
   let create_getter_or_setter = kind => {
     let returned_value =
@@ -13,7 +13,7 @@ let emit_make_reference = (clazz_id, object_id, field_id, t) => {
         emit_jni_field_access(kind, t),
         [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
       );
-    unsafe_cast_returned_value(t.kind, returned_value);
+    unsafe_cast_returned_value(t.type_, returned_value);
   };
   let getter = create_getter_or_setter(`Getter);
   let getter = pexp_fun(Nolabel, None, punit, getter);
@@ -43,8 +43,8 @@ let emit = (jni_class_name, t: t) => {
   };
   pexp_let_alias(field_id, declare_field_id, declare_function);
 };
-let emit_type = (kind, t) => {
-  let content_type = Java_Type_Emit.emit_type(t.kind);
+let emit_type = (kind, t: java_field) => {
+  let content_type = Java_Type_Emit.emit_type(t.type_);
   let rtype = ptyp_constr(Located.mk(lident("ref")), [content_type]);
 
   switch (kind) {

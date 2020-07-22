@@ -44,6 +44,12 @@ let jmethod_to_java_method = jmethod =>
       |> List.tl
       |> String.concat(":");
     let static = concrete_method.cm_static;
+    let kind =
+      switch (static, java_name) {
+      | (true, _) => `Function
+      | (false, "<init>") => `Constructor
+      | (false, _) => `Method
+      };
     let variable_table =
       switch (concrete_method.cm_implementation) {
       | Native => []
@@ -78,7 +84,7 @@ let jmethod_to_java_method = jmethod =>
       java_name,
       java_signature,
       name: java_name,
-      static,
+      kind,
       parameters: java_parameters,
       return_type: java_return_type,
     };
@@ -110,7 +116,7 @@ let class_field_to_java_field = class_field => {
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
-  {java_signature, name, static, kind: java_type};
+  {java_signature, name, static, type_: java_type};
 };
 let jclass_to_java_class = jclass => {
   let java_name = class_name_to_object_type(jclass.c_name);
@@ -120,7 +126,7 @@ let jclass_to_java_class = jclass => {
     |> FieldMap.value_elements
     |> List.map(class_field_to_java_field);
 
-  let all_methods =
+  let methods =
     jclass.c_methods
     |> MethodMap.value_elements
     |> List.map(jmethod_to_java_method)
@@ -133,12 +139,7 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  let (constructors, methods) =
-    all_methods
-    |> List.partition((java_method: java_method) =>
-         java_method.java_name == "<init>"
-       );
-  {java_name, name: java_name, extends, fields, constructors, methods};
+  {java_name, name: java_name, extends, fields, methods};
 };
 
 let create_env_and_package = (folder, classes) => {

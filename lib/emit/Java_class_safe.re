@@ -129,8 +129,7 @@ let emit_methods_type = (kind, methods) =>
   methods |> List.map(emit_method_type(kind));
 
 let emit_module_type = t => {
-  let static_methods =
-    List.filter(({static, _}: java_method) => static, t.methods);
+  let static_methods = List.filter(Java_Method.is_static, t.methods);
   let static_methods = emit_methods_type(`Method, static_methods);
   let type_declaration = psig_type_alias("t", unsafe_class_lid(t.name));
   let signature =

@@ -23,13 +23,14 @@ let find_required_classes = t => {
 };
 
 let get_methods_by_kind = t =>
-  t.methods |> List.partition(({static, _}) => static);
+  t.methods |> List.partition(Java_Method.is_static);
 
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
 let emit_curried_method = method => {
-  let modules = method.static ? ["Static"] : ["Methods"];
-  let arg = method.static ? evar(jni_class_name) : evar(object_id);
+  let static = Java_Method.is_static(method);
+  let modules = static ? ["Static"] : ["Methods"];
+  let arg = static ? evar(jni_class_name) : evar(object_id);
   eapply(evar(~modules, unsafe_name(method.name)), [arg]);
 };
