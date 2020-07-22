@@ -138,6 +138,22 @@ module Env = {
     env_functions: StringMap.t(Longident.t),
   };
 
+  let add_field = (name, lid, t) => {
+    ...t,
+    env_fields: StringMap.add(name, lid, t.env_fields),
+  };
+  let add_constructor = (name, lid, t) => {
+    ...t,
+    env_constructors: StringMap.add(name, lid, t.env_constructors),
+  };
+  let add_method = (name, lid, t) => {
+    ...t,
+    env_methods: StringMap.add(name, lid, t.env_methods),
+  };
+  let add_function = (name, lid, t) => {
+    ...t,
+    env_functions: StringMap.add(name, lid, t.env_functions),
+  };
   let add_class =
       (
         ~fields=StringMap.empty,
