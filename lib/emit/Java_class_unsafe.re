@@ -1,5 +1,5 @@
-open Basic_types;
 open Emit_Helper;
+open Basic_types;
 open Java_Type;
 open Java_class;
 open Structures;
@@ -93,7 +93,7 @@ let emit = t => {
   ];
 };
 
-let emit_class = t => {
+let emit_class = (env, t) => {
   let java_fields =
     t.fields
     |> List.map(({name, _}: java_field) =>
@@ -103,7 +103,7 @@ let emit_class = t => {
            Cfk_concrete(
              Fresh,
              eapply(
-               evar(~modules=["Fields"], unsafe_name(name)),
+               Env.field_lid(t.name, name, env) |> loc |> pexp_ident,
                [evar(object_id)],
              ),
            ),
@@ -143,6 +143,25 @@ let emit_class = t => {
     );
   pstr_class([class_declaration]);
 };
+
+let emit_class_functor_env = t => {
+  let params_lid = Lident("Params");
+  let env = Env.empty;
+  let env =
+    t.extends
+    |> Option.map((extends: class_name) => {
+         let lid = concat_lid([params_lid, Lident(extends.name)]);
+         env |> Env.add_class(extends, lid);
+       })
+    |> Option.value(~default=env);
+
+  let fields_lid = concat_lid([params_lid, Lident("Fields")]);
+  let methods_lid = concat_lid([params_lid, Lident("Methods")]);
+  env
+  |> Env.add_class(t.name, Lident("Invalid"))
+  |> Env.set_fields(t.fields, fields_lid, t.name)
+  |> Env.set_methods(t.methods, methods_lid, t.name);
+};
 let emit_class_functor_parameters_type = t => {
   let parent = {
     let.some extends = t.extends;
@@ -165,15 +184,18 @@ let emit_class_functor_parameters_type = t => {
   |> pmty_signature;
 };
 let emit_class_functor = t => {
-  let content = emit_class(t);
-  let parameter =
+  let env = emit_class_functor_env(t);
+  let env = env |> Env.open_lid(Lident("Params"));
+
+  let content = emit_class(env, t);
+  let parameters =
     Named(
       Located.mk(Some("Params")),
       emit_class_functor_parameters_type(t),
     );
+  let content = [[%stri open Params], content];
   // useful to ensure the generated code complies with the type definition
-  let mod_functor =
-    pmod_functor(parameter, pmod_structure([[%stri open Params], content]));
+  let mod_functor = pmod_functor(parameters, pmod_structure(content));
   module_binding(~name=Located.mk(Some("Class")), ~expr=mod_functor)
   |> pstr_module;
 };
