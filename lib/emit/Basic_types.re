@@ -58,6 +58,47 @@ module Java_Env =
     let compare = compare_class_name;
   });
 
+module Env = {
+  module StringMap = Map.Make(String);
+  include Map.Make({
+    type t = class_name;
+    let compare = compare_class_name;
+  });
+
+  type value = {
+    env_unsafe_class: Longident.t,
+    env_jni_class: Longident.t,
+    env_fields: StringMap.t(Longident.t),
+    env_constructors: StringMap.t(Longident.t),
+    env_methods: StringMap.t(Longident.t),
+    env_functions: StringMap.t(Longident.t),
+  };
+
+  let rec sub_lid = (a, b) =>
+    Longident.(
+      switch (a, b) {
+      | (Ldot(content, name), Lident(b_name)) when name == b_name => content
+      | (Ldot(content, name), Ldot(b_content, b_name)) when name == b_name =>
+        sub_lid(content, b_content)
+      | (a, _) => a
+      }
+    );
+
+  let open_lid_value = (to_open, value) => {
+    let sub_lid = a => sub_lid(a, to_open);
+    let sub_lid_map = str_map => str_map |> StringMap.map(sub_lid);
+    {
+      env_unsafe_class: sub_lid(value.env_unsafe_class),
+      env_jni_class: sub_lid(value.env_jni_class),
+      env_fields: sub_lid_map(value.env_fields),
+      env_constructors: sub_lid_map(value.env_constructors),
+      env_methods: sub_lid_map(value.env_methods),
+      env_functions: sub_lid_map(value.env_functions),
+    };
+  };
+  let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
+};
+
 module Structures = {
   open Emit_Helper;
 
@@ -120,43 +161,4 @@ module Structures = {
     | _ => returned_value
     };
   };
-};
-
-/**
-  this is an optimization pass to make the access of values local
-  is it needed anyway?
-*/
-module Relativize = {
-  /** so if you have a same package access it doesn't go through the full path */
-  let class_name = (clazz_id, class_name) => {
-    clazz_id.package == class_name.package
-      ? {package: [], name: class_name.name} : class_name;
-  };
-  let java_type = clazz_id =>
-    fun
-    | Object(object_type) => {
-        let object_type = class_name(clazz_id, object_type);
-        Object(object_type);
-      }
-    | java_type => java_type;
-  let java_field = (clazz_id, field) => {
-    ...field,
-    type_: java_type(clazz_id, field.type_),
-  };
-  let java_method = (clazz_id, method) => {
-    let relativize = java_type(clazz_id);
-    let parameters =
-      method.parameters
-      |> List.map(((name, value)) => (name, relativize(value)));
-    let return_type = relativize(method.return_type);
-    {...method, parameters, return_type};
-  };
-  let java_class = (clazz_id, java_class) => {
-    let name = class_name(clazz_id, java_class.name);
-    let extends = Option.map(class_name(clazz_id), java_class.extends);
-    let fields = java_class.fields |> List.map(java_field(clazz_id));
-    let methods = java_class.methods |> List.map(java_method(clazz_id));
-    {...java_class, name, extends, fields, methods};
-  };
-  let java_env = (clazz_id, env) => Java_Env.map(java_class(clazz_id), env);
 };

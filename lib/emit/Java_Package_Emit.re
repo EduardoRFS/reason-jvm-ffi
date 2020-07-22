@@ -52,8 +52,6 @@ let emit_file_classes = (env, t) => {
            // TODO: exception
            let java_class = Java_Env.find(id, env);
            let required_class = Java_class.find_required_classes(java_class);
-           let java_class =
-             Relativize.java_class(java_class.name, java_class);
            (id, Java_class_safe.emit_file(required_class, java_class));
          });
     let new_acc = List.append(classes, acc);
