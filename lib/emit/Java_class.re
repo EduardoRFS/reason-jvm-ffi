@@ -1,6 +1,12 @@
 open Emit_Helper;
 open Basic_types;
 
+/*
+   why two different functors?
+   Because inheritance and recursive modes don't play well,
+   the type system can even check it, but it will crash at runtime during boot
+ */
+
 // TODO: keep same method order as in the bytecode
 
 let (let.some) = Option.bind;

@@ -75,10 +75,21 @@ module Structures = {
       package == []
         ? [Lident(name)] : [package_lid(package), Lident(name)],
     );
+  let module_type_lid = name =>
+    concat_lid([Lident("Javatype"), class_lid(name)]);
 
   let unsafe_name = name => "unsafe_" ++ name;
   let unsafe_lid = name => Lident(unsafe_name(name));
   let unsafe_module_lid = Longident.parse("Unsafe.Please.Stop");
+  let unsafe_module_type_lid = name =>
+    concat_lid([module_type_lid(name), unsafe_module_lid]);
+  let unsafe_class_lid = class_name =>
+    concat_lid([
+      class_lid(class_name),
+      unsafe_module_lid,
+      Lident("Class"),
+      unsafe_lid("t"),
+    ]);
   let unsafe_module = content => [%stri
     module Unsafe = {
       module Please = {
@@ -92,13 +103,6 @@ module Structures = {
   let unsafe_module_type = content => [%sigi:
     module Unsafe: {module Please: {module Stop: {[%%s content];};};}
   ];
-  let unsafe_class_lid = class_name =>
-    concat_lid([
-      class_lid(class_name),
-      unsafe_module_lid,
-      Lident("Class"),
-      unsafe_lid("t"),
-    ]);
 
   let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
 

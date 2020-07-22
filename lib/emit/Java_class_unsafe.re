@@ -31,6 +31,38 @@ let emit_methods = methods =>
        pstr_value_alias(name, emit_method(method));
      });
 
+let emit = t => {
+  let (functions, methods) = get_methods_by_kind(t);
+  let declare_fields = [%stri
+    module Fields = {
+      %s
+      emit_fields(t);
+    }
+  ];
+  let declare_methods = [%stri
+    module Methods = {
+      %s
+      emit_methods(methods);
+    }
+  ];
+  let declare_functions = [%stri
+    module Static = {
+      %s
+      emit_methods(functions);
+    }
+  ];
+
+  let find_class = {
+    let name = Object_Type.to_jvm_name(t.java_name) |> estring;
+    pstr_value_alias(
+      jni_class_name,
+      [%expr () => Jni.find_class([%e name])],
+    );
+  };
+
+  [find_class, declare_fields, declare_methods, declare_functions];
+};
+
 let emit_class = t => {
   let (_functions, methods) = get_methods_by_kind(t);
 
@@ -74,51 +106,47 @@ let emit_class = t => {
   let class_expr =
     class_structure(~self=ppat_any, ~fields=class_fields) |> pcl_structure;
   let class_fun = pcl_fun(Nolabel, None, pvar(object_id), class_expr);
-  class_infos(
-    ~virt=Concrete,
-    ~params=[],
-    ~name=Located.mk(unsafe_t),
-    ~expr=class_fun // TODO: wait, class_infos without class_expr?
-  );
-};
-
-let emit = t => {
-  let (functions, methods) = get_methods_by_kind(t);
-  let declare_fields = [%stri
-    module Fields = {
-      %s
-      emit_fields(t);
-    }
-  ];
-  let declare_methods = [%stri
-    module Methods = {
-      %s
-      emit_methods(methods);
-    }
-  ];
-  let declare_functions = [%stri
-    module Static = {
-      %s
-      emit_methods(functions);
-    }
-  ];
-
-  let find_class = {
-    let name = Object_Type.to_jvm_name(t.java_name) |> estring;
-    pstr_value_alias(
-      jni_class_name,
-      [%expr () => Jni.find_class([%e name])],
+  let class_declaration =
+    class_infos(
+      ~virt=Concrete,
+      ~params=[],
+      ~name=Located.mk(unsafe_t),
+      ~expr=class_fun // TODO: wait, class_infos without class_expr?
     );
+  pstr_class([class_declaration]);
+};
+let emit_class_functor_parameters_type = t => {
+  let parent = {
+    let.some extends = t.extends;
+    let parent_name = extends.name;
+    let parent_type_module =
+      concat_lid([unsafe_module_type_lid(extends), Lident("Class")]);
+    Some([psig_module_alias_module(parent_name, parent_type_module)]);
   };
-
-  let class_declaration = pstr_class([emit_class(t)]);
-  [
-    find_class,
-    declare_fields,
-    declare_methods,
-    declare_functions,
-    class_declaration,
-  ];
+  let fields =
+    psig_module_alias_module(
+      "Fields",
+      concat_lid([unsafe_module_type_lid(t.java_name), Lident("Fields")]),
+    );
+  let methods =
+    psig_module_alias_module(
+      "Methods",
+      concat_lid([unsafe_module_type_lid(t.java_name), Lident("Methods")]),
+    );
+  List.append(Option.value(~default=[], parent), [fields, methods])
+  |> pmty_signature;
+};
+let emit_class_functor = t => {
+  let content = emit_class(t);
+  let parameter =
+    Named(
+      Located.mk(Some("Params")),
+      emit_class_functor_parameters_type(t),
+    );
+  // useful to ensure the generated code complies with the type definition
+  let mod_functor = pmod_functor(parameter, pmod_structure([content]));
+  module_binding(~name=Located.mk(Some("Class")), ~expr=mod_functor)
+  |> pstr_module;
 };
 
 let emit_fields_type = fields =>

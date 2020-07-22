@@ -2,6 +2,7 @@ open Emit_Helper;
 open Basic_types;
 open Structures;
 open Java_class;
+
 // TODO: keep same method order as in the bytecode
 
 let emit_functor_parameters_type = (required_classes, self: java_class) => {
@@ -95,7 +96,6 @@ let emit_functor = (required_class, t) => {
       );
     pstr_recmodule([wrapper]);
   };
-  // TODO: hardcoded Javatype
   let parameter =
     Named(
       Located.mk(Some("Params")),

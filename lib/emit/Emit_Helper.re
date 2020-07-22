@@ -85,3 +85,11 @@ let pstr_open_alias = (~warning=false, ~override=Fresh, lid) => {
   };
   pstr_open(info);
 };
+
+let psig_module_alias_module = (name, alias) => {
+  module_declaration(
+    ~name=loc(Some(name)),
+    ~type_=pmty_typeof(pmod_ident(loc(alias))),
+  )
+  |> psig_module;
+};
