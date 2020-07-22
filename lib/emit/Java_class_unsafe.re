@@ -120,7 +120,7 @@ let emit_class = (env, t) => {
        );
   let inheritance_field = {
     let.some extends_id = t.extends;
-    let extends_lid = unsafe_class_lid(extends_id) |> Located.mk;
+    let extends_lid = env |> Env.unsafe_class_lid(extends_id) |> loc;
     let extends = pcl_constr(extends_lid, []);
     let apply_class = pcl_apply(extends, [(Nolabel, evar(object_id))]);
     Some([pcf_inherit(Fresh, apply_class, None)]);
