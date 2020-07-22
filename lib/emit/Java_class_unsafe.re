@@ -51,6 +51,11 @@ let emit = t => {
       emit_methods(functions);
     }
   ];
+  let include_class_declaration =
+    loc(class_lid(t.java_name))
+    |> pmod_ident
+    |> include_infos
+    |> pstr_include;
 
   let find_class = {
     let name = Object_Type.to_jvm_name(t.java_name) |> estring;
@@ -60,7 +65,13 @@ let emit = t => {
     );
   };
 
-  [find_class, declare_fields, declare_methods, declare_functions];
+  [
+    find_class,
+    declare_fields,
+    declare_methods,
+    declare_functions,
+    include_class_declaration,
+  ];
 };
 
 let emit_class = t => {
