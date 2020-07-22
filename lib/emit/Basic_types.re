@@ -210,6 +210,14 @@ module Env = {
   };
   let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
 
+  let unsafe_class_lid = (class_name, t) => {
+    let value = t |> find(class_name);
+    value.env_unsafe_class;
+  };
+  let jni_class_lid = (class_name, t) => {
+    let value = t |> find(class_name);
+    value.env_jni_class;
+  };
   let find_lid = (f, class_name, name, t) => {
     let value = t |> find(class_name);
     f(value) |> StringMap.find(name);
