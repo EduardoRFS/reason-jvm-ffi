@@ -124,6 +124,7 @@ module Structures = {
 
 module Env = {
   module StringMap = Map.Make(String);
+  let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
   include Map.Make({
     type t = class_name;
     let compare = compare_class_name;
@@ -138,41 +139,44 @@ module Env = {
     env_functions: StringMap.t(Longident.t),
   };
 
-  let add_field = (name, lid, t) => {
-    ...t,
-    env_fields: StringMap.add(name, lid, t.env_fields),
+  open Structures;
+  let update_name = (value, f, name, t) =>
+    // TODO: what if doesn't exists
+    t |> add(name, f(value, find(name, t)));
+  let set_fields = (fields, lid) => {
+    let env_fields =
+      fields
+      |> List.map((field: java_field) =>
+           (field.name, concat_lid([lid, unsafe_lid(field.name)]))
+         )
+      |> string_map_of_pairs;
+    update_name(env_fields, (env_fields, t) => {...t, env_fields});
   };
-  let add_constructor = (name, lid, t) => {
-    ...t,
-    env_constructors: StringMap.add(name, lid, t.env_constructors),
+  let update_methods = (map, methods, lid) => {
+    let env_methods =
+      methods
+      |> List.map((method: java_method) =>
+           (method.name, concat_lid([lid, unsafe_lid(method.name)]))
+         )
+      |> string_map_of_pairs;
+    update_name(env_methods, map);
   };
-  let add_method = (name, lid, t) => {
-    ...t,
-    env_methods: StringMap.add(name, lid, t.env_methods),
-  };
-  let add_function = (name, lid, t) => {
-    ...t,
-    env_functions: StringMap.add(name, lid, t.env_functions),
-  };
-  let add_class =
-      (
-        ~fields=StringMap.empty,
-        ~constructors=StringMap.empty,
-        ~methods=StringMap.empty,
-        ~functions=StringMap.empty,
-        class_name,
-        lid,
-      ) => {
-    open Structures;
+  let set_constructors =
+    update_methods((env_constructors, t) => {...t, env_constructors});
+  let set_methods = update_methods((env_methods, t) => {...t, env_methods});
+  let set_functions =
+    update_methods((env_functions, t) => {...t, env_functions});
+
+  let add_class = (class_name, lid) => {
     let unsafe_class = concat_lid([lid, unsafe_lid("unsafe_t")]);
     let unsafe_jni_clazz = concat_lid([lid, unsafe_lid("unsafe_jni_clazz")]);
     let value = {
       env_unsafe_class: unsafe_class,
       env_jni_class: unsafe_jni_clazz,
-      env_fields: fields,
-      env_constructors: constructors,
-      env_methods: methods,
-      env_functions: functions,
+      env_fields: StringMap.empty,
+      env_constructors: StringMap.empty,
+      env_methods: StringMap.empty,
+      env_functions: StringMap.empty,
     };
     add(class_name, value);
   };
