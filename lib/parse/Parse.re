@@ -119,14 +119,11 @@ let jclass_to_java_class = jclass => {
     jclass.c_fields
     |> FieldMap.value_elements
     |> List.map(class_field_to_java_field);
-  let methods =
+
+  let all_methods =
     jclass.c_methods
     |> MethodMap.value_elements
-    |> List.filter_map(jmethod => {
-         let java_method = jmethod_to_java_method(jmethod);
-         // TODO: support constructors and static
-         java_method.name == "<init>" ? None : Some(java_method);
-       })
+    |> List.map(jmethod_to_java_method)
     |> escape_duplicated_names(
          (method: java_method, method') =>
            method.java_name == method'.java_name,
@@ -136,7 +133,12 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  {java_name, name: java_name, extends, fields, methods};
+  let (constructors, methods) =
+    all_methods
+    |> List.partition((java_method: java_method) =>
+         java_method.java_name == "<init>"
+       );
+  {java_name, name: java_name, extends, fields, constructors, methods};
 };
 
 let create_env_and_package = (folder, classes) => {

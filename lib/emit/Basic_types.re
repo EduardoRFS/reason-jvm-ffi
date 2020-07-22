@@ -47,7 +47,7 @@ type java_class = {
   name: class_name,
   extends: option(class_name),
   fields: list(java_field),
-  // TODO: maybe static should be separated?
+  constructors: list(java_method),
   methods: list(java_method),
 };
 
