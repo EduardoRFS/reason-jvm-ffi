@@ -139,7 +139,24 @@ let jclass_to_java_class = jclass => {
              name: method.java_name ++ "_" ++ string_of_int(index),
            },
        );
-  {java_name, name: java_name, extends, fields, methods};
+  let (functions, constructors, methods) = {
+    let (functions, methods) =
+      methods
+      |> List.partition((method: java_method) => method.kind == `Function);
+    let (constructors, methods) =
+      methods
+      |> List.partition((method: java_method) => method.kind == `Constructor);
+    (functions, constructors, methods);
+  };
+  {
+    java_name,
+    name: java_name,
+    extends,
+    fields,
+    functions,
+    constructors,
+    methods,
+  };
 };
 
 let create_env_and_package = (folder, classes) => {

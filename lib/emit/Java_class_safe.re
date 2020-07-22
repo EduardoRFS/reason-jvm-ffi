@@ -60,9 +60,8 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
   pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = (required_class, t) => {
-  let (functions, _methods) = get_methods_by_kind(t);
   let static_methods =
-    functions
+    t.functions
     |> List.map((method: java_method) =>
          pstr_value_alias(method.name, emit_curried_method(method))
        );

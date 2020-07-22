@@ -33,8 +33,6 @@ let emit_methods = methods =>
      });
 
 let emit = t => {
-  let (functions, methods) = get_methods_by_kind(t);
-
   let declare_fields = [%stri
     module Fields = {
       %s
@@ -44,13 +42,13 @@ let emit = t => {
   let declare_methods = [%stri
     module Methods = {
       %s
-      emit_methods(methods);
+      emit_methods(t.methods);
     }
   ];
   let declare_functions = [%stri
     module Static = {
       %s
-      emit_methods(functions);
+      emit_methods(t.functions);
     }
   ];
   let include_class_declaration =
@@ -89,8 +87,6 @@ let emit = t => {
 };
 
 let emit_class = t => {
-  let (_functions, methods) = get_methods_by_kind(t);
-
   let java_fields =
     t.fields
     |> List.map(({name, _}: java_field) =>
@@ -107,7 +103,7 @@ let emit_class = t => {
          ))
        );
   let method_fields =
-    methods
+    t.methods
     |> List.map(({name, _} as method: java_method) =>
          pcf_method((
            Located.mk(name),
@@ -188,8 +184,6 @@ let emit_fields_type = fields =>
        |> psig_value;
      });
 let emit_class_type = t => {
-  let (_functions, methods) = get_methods_by_kind(t);
-
   let inheritance_field = {
     let.some extends_id = t.extends;
     let extends_lid = unsafe_class_lid(extends_id) |> Located.mk;
@@ -208,7 +202,7 @@ let emit_class_type = t => {
          ))
        );
   let method_fields =
-    methods
+    t.methods
     |> List.map(({name, _} as method: java_method) =>
          pctf_method((
            Located.mk(name),
@@ -245,12 +239,11 @@ let emit_type = t => {
   let declare_fields = [%sigi:
     module Fields: {[%%s emit_fields_type(t.fields)];}
   ];
-  let (functions, methods) = get_methods_by_kind(t);
   let declare_methods = [%sigi:
-    module Methods: {[%%s emit_methods_type(`Unsafe, methods)];}
+    module Methods: {[%%s emit_methods_type(`Unsafe, t.methods)];}
   ];
   let declare_functions = [%sigi:
-    module Static: {[%%s emit_methods_type(`Unsafe, functions)];}
+    module Static: {[%%s emit_methods_type(`Unsafe, t.functions)];}
   ];
   let delcare_class = [%sigi:
     module Class: {[%%s [psig_class([emit_class_type(t)])]];}

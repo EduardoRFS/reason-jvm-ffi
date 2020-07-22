@@ -22,9 +22,6 @@ let find_required_classes = t => {
   extends @ methods;
 };
 
-let get_methods_by_kind = t =>
-  t.methods |> List.partition(Java_Method.is_static);
-
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
