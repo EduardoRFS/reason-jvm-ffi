@@ -68,7 +68,10 @@ let emit_functor = (required_class, t) => {
        );
 
   let type_value =
-    pstr_type_alias("t", concat_lid([unsafe_module_lid, unsafe_lid("t")]));
+    pstr_type_alias(
+      "t",
+      concat_lid([unsafe_module_lid, Lident("Class"), unsafe_lid("t")]),
+    );
   let safe_values = [type_value, ...static_methods];
 
   let open_package = pstr_open_alias(package_lid(t.java_name.package));

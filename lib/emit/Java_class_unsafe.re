@@ -33,6 +33,7 @@ let emit_methods = methods =>
 
 let emit = t => {
   let (functions, methods) = get_methods_by_kind(t);
+
   let declare_fields = [%stri
     module Fields = {
       %s
@@ -62,6 +63,11 @@ let emit = t => {
       [include_class_declaration];
     }
   ];
+  // TODO: this is a hackish solution, shouldn't be needed
+  let declare_self_alias = {
+    let alias = pmod_structure([unsafe_module([declare_class])]);
+    module_binding(~name=loc(Some(t.name.name)), ~expr=alias) |> pstr_module;
+  };
 
   let find_class = {
     let name = Object_Type.to_jvm_name(t.java_name) |> estring;
@@ -72,6 +78,7 @@ let emit = t => {
   };
 
   [
+    declare_self_alias,
     find_class,
     declare_fields,
     declare_methods,
