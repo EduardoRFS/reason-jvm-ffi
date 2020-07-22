@@ -56,6 +56,12 @@ let emit = t => {
     |> pmod_ident
     |> include_infos
     |> pstr_include;
+  let declare_class = [%stri
+    module Class = {
+      %s
+      [include_class_declaration];
+    }
+  ];
 
   let find_class = {
     let name = Object_Type.to_jvm_name(t.java_name) |> estring;
@@ -70,7 +76,7 @@ let emit = t => {
     declare_fields,
     declare_methods,
     declare_functions,
-    include_class_declaration,
+    declare_class,
   ];
 };
 
