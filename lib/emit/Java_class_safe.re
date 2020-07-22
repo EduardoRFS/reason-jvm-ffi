@@ -5,6 +5,17 @@ open Java_class;
 
 // TODO: keep same method order as in the bytecode
 
+let emit_constructor = (constructor: java_method) => {
+  let alloc_object =
+    eapply(
+      [%expr Jni.alloc_object],
+      [eapply(evar(jni_class_name), [eunit])],
+    );
+  let unsafe_constructor_to_call =
+    concat_lid([Lident("Constructors"), unsafe_lid(constructor.name)]);
+  eapply(pexp_ident(loc(unsafe_constructor_to_call)), [alloc_object]);
+};
+
 let emit_functor_parameters_type = (required_classes, self: java_class) => {
   // TODO: duplicated because mutually recursive
   let emit_alias_type = {
@@ -65,13 +76,18 @@ let emit_functor = (required_class, t) => {
     |> List.map((method: java_method) =>
          pstr_value_alias(method.name, emit_curried_method(method))
        );
-
+  let constructors =
+    t.constructors
+    |> List.map((method: java_method) =>
+         pstr_value_alias(method.name, emit_constructor(method))
+       );
   let type_value =
     pstr_type_alias(
       "t",
       concat_lid([unsafe_module_lid, Lident("Class"), unsafe_lid("t")]),
     );
-  let safe_values = [type_value, ...static_methods];
+  let safe_values =
+    List.concat([[type_value], constructors, static_methods]);
 
   let open_package = pstr_open_alias(package_lid(t.java_name.package));
   let content = [%str
