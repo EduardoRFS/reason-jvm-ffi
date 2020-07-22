@@ -1,7 +1,6 @@
 open Basic_types;
 open Emit_Helper;
 open Java_Type;
-open Java_Type_Emit;
 open Java_class;
 open Structures;
 
@@ -61,8 +60,7 @@ let emit_class = t => {
        );
   let inheritance_field = {
     let.some extends_id = t.extends;
-    let extends_lid =
-      Object_Type_Emit.emit_unsafe_lid(extends_id) |> Located.mk;
+    let extends_lid = unsafe_class_lid(extends_id) |> Located.mk;
     let extends = pcl_constr(extends_lid, []);
     let apply_class = pcl_apply(extends, [(Nolabel, evar(object_id))]);
     Some([pcf_inherit(Fresh, apply_class, None)]);
@@ -140,8 +138,7 @@ let emit_class_type = t => {
 
   let inheritance_field = {
     let.some extends_id = t.extends;
-    let extends_lid =
-      Object_Type_Emit.emit_unsafe_lid(extends_id) |> Located.mk;
+    let extends_lid = unsafe_class_lid(extends_id) |> Located.mk;
     let extends = pcty_constr(extends_lid, []);
     Some([pctf_inherit(extends)]);
   };
@@ -201,14 +198,15 @@ let emit_type = t => {
   let declare_functions = [%sigi:
     module Static: {[%%s emit_methods_type(`Unsafe, functions)];}
   ];
-
-  let class_declaration = psig_class([emit_class_type(t)]);
+  let delcare_class = [%sigi:
+    module Class: {[%%s [psig_class([emit_class_type(t)])]];}
+  ];
   let content = [
     declare_jni_class,
     declare_fields,
     declare_methods,
     declare_functions,
-    class_declaration,
+    delcare_class,
   ];
   unsafe_module_type(content);
 };

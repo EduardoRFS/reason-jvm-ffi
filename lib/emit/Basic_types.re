@@ -93,7 +93,12 @@ module Structures = {
     module Unsafe: {module Please: {module Stop: {[%%s content];};};}
   ];
   let unsafe_class_lid = class_name =>
-    concat_lid([class_lid(class_name), unsafe_module_lid, unsafe_lid("t")]);
+    concat_lid([
+      class_lid(class_name),
+      unsafe_module_lid,
+      Lident("Class"),
+      unsafe_lid("t"),
+    ]);
 
   let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
 

@@ -39,6 +39,19 @@ let pstr_value_alias = (name, expr) => {
   let binding = value_binding(~pat=pvar(name), ~expr);
   pstr_value(Nonrecursive, [binding]);
 };
+let psig_type_alias = (name, alias) => {
+  let constr = ptyp_constr(Located.mk(alias), []);
+  let declaration =
+    type_declaration(
+      ~name=Located.mk(name),
+      ~params=[],
+      ~cstrs=[],
+      ~kind=Ptype_abstract,
+      ~private_=Public,
+      ~manifest=Some(constr),
+    );
+  psig_type(Nonrecursive, [declaration]);
+};
 let pexp_let_alias = (name, value, expr) => {
   let binding = value_binding(~pat=pvar(name), ~expr=value);
   pexp_let(Nonrecursive, [binding], expr);
