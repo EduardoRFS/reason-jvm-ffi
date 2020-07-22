@@ -17,11 +17,7 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
            );
       let modules =
         // TODO: handle exception
-        t
-        |> Java_Package.classes
-        // filter here to ensure there is the package even if empty
-        |> List.filter((!=)(self.java_name))
-        |> List.rev_map(class_fn);
+        t |> Java_Package.classes |> List.rev_map(class_fn);
 
       let signature = List.append(packages, modules);
       module_declaration(
@@ -32,8 +28,12 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
     emit_package_type(
       // TODO: hardcoded Javatype
       class_id => {
+      // TODO: this is clearly hackish
+      let class_lid = class_lid(class_id);
       let class_lid =
-        Java_Type_Emit.Object_Type_Emit.emit_module_lid(class_id);
+        self.java_name == class_id
+          ? concat_lid([class_lid, unsafe_module_lid, Lident("Class")])
+          : class_lid;
       // TODO: this kinda of module creationg should be centralized
       module_declaration(
         ~name=Located.mk(Some(class_id.name |> String.capitalize_ascii)),
