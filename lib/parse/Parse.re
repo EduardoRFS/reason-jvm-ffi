@@ -38,6 +38,11 @@ let jmethod_to_java_method = jmethod =>
     let signature = concrete_method.cm_signature;
 
     let java_name = ms_name(signature);
+    let java_signature =
+      JPrint.method_signature(~jvm=true, signature)
+      |> String.split_on_char(':')
+      |> List.tl
+      |> String.concat(":");
     let static = concrete_method.cm_static;
     let variable_table =
       switch (concrete_method.cm_implementation) {
@@ -71,7 +76,7 @@ let jmethod_to_java_method = jmethod =>
       |> Option.value(~default=Void);
     Java_Method.{
       java_name,
-      java_signature: JPrint.method_signature(~jvm=true, signature),
+      java_signature,
       name: java_name,
       static,
       parameters: java_parameters,
@@ -96,7 +101,12 @@ let escape_duplicated_names = (compare, transform, list) =>
 
 let class_field_to_java_field = class_field => {
   let signature = class_field.cf_signature;
-  let java_signature = JPrint.field_signature(~jvm=true, signature);
+  // TODO: find a better alternative to this
+  let java_signature =
+    JPrint.field_signature(~jvm=true, signature)
+    |> String.split_on_char(':')
+    |> List.tl
+    |> String.concat(":");
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
