@@ -211,5 +211,5 @@ module Env = {
   let field_lid = find_lid(value => value.env_fields);
   let constructor_lid = find_lid(value => value.env_constructors);
   let method_lid = find_lid(value => value.env_methods);
-  let function_lid = find_lid(value => value.env_fields);
+  let function_lid = find_lid(value => value.env_functions);
 };
