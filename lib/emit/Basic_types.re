@@ -119,6 +119,7 @@ module Structures = {
 
 /**
   this is an optimization pass to make the access of values local
+  is it needed anyway?
 */
 module Relativize = {
   /** so if you have a same package access it doesn't go through the full path */
