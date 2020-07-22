@@ -54,7 +54,7 @@ let method_id = "jni_methodID";
 
 let emit_jni_get_methodID = (jni_class_name, t: java_method) =>
   eapply(
-    [%expr Jni.get_methodID],
+    t.static ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
     [
       eapply(evar(jni_class_name), [eunit]),
       estring(t.java_name),
