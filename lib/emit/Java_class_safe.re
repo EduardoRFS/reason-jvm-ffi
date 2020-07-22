@@ -16,6 +16,15 @@ let emit_constructor = (constructor: java_method) => {
   eapply(pexp_ident(loc(unsafe_constructor_to_call)), [alloc_object]);
 };
 
+let emit_functor_env = (required_classes, t: java_class) => {
+  let add_class = (env, clazz: java_class) => {
+    let lid = concat_lid([class_lid(clazz.name), unsafe_module_lid]);
+    env |> Env.add_class(clazz, lid);
+  };
+  let add_self = (self: java_class) =>
+    Env.add_empty_class(self.name, class_lid(self.name));
+  required_classes |> List.fold_left(add_class, Env.empty) |> add_self(t);
+};
 let emit_functor_parameters_type = (required_classes, self: java_class) => {
   // TODO: duplicated because mutually recursive
   let emit_alias_type = {
@@ -53,6 +62,7 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
       |> psig_module;
     });
   };
+  let required_classes = required_classes |> List.map(clazz => clazz.name);
   let modules = {
     required_classes
     // TODO: this is clearly hackish
@@ -71,6 +81,7 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
   pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = (required_class, t) => {
+  let _env = emit_functor_env(required_class, t);
   let static_methods =
     t.functions
     |> List.map((method: java_method) =>
