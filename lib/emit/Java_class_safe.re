@@ -112,7 +112,7 @@ let emit_functor = (required_class, t) => {
 let emit_file = (required_class, t) => [%str
   open JavaFFI;
   %s
-  [emit_functor(required_class, t)]
+  [Java_class_unsafe.emit_class_functor(t), emit_functor(required_class, t)]
 ];
 
 // TODO: this is mostly duplicated code grr
