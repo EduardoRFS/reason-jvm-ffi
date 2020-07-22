@@ -180,15 +180,21 @@ module Env = {
     };
     add(class_name, value);
   };
-  let rec sub_lid = (a, b) =>
-    Longident.(
+  let sub_lid = (a: Longident.t, b: Longident.t) => {
+    // TODO: this code is terrible
+    let rec starts_with = (a, b) =>
       switch (a, b) {
-      | (Ldot(content, name), Lident(b_name)) when name == b_name => content
-      | (Ldot(content, name), Ldot(b_content, b_name)) when name == b_name =>
-        sub_lid(content, b_content)
-      | (a, _) => a
-      }
-    );
+      | (_, []) => None
+      | ([], rest) => Some(rest)
+      | ([a, ...a_rest], [b, ...b_rest]) when a == b =>
+        starts_with(a_rest, b_rest)
+      | _ => None
+      };
+    let a = Longident.flatten(a);
+    let b = Longident.flatten(b);
+    let match = a |> starts_with(b) |> Option.value(~default=a);
+    Longident.unflatten(match) |> Option.get;
+  };
 
   let open_lid_value = (to_open, value) => {
     let sub_lid = a => sub_lid(a, to_open);
