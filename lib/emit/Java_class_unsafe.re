@@ -151,14 +151,14 @@ let emit_class_functor_env = t => {
     t.extends
     |> Option.map((extends: class_name) => {
          let lid = concat_lid([params_lid, Lident(extends.name)]);
-         env |> Env.add_class(extends, lid);
+         env |> Env.add_empty_class(extends, lid);
        })
     |> Option.value(~default=env);
 
   let fields_lid = concat_lid([params_lid, Lident("Fields")]);
   let methods_lid = concat_lid([params_lid, Lident("Methods")]);
   env
-  |> Env.add_class(t.name, Lident("Invalid"))
+  |> Env.add_empty_class(t.name, Lident("Invalid"))
   |> Env.set_fields(t.fields, fields_lid, t.name)
   |> Env.set_methods(t.methods, methods_lid, t.name);
 };

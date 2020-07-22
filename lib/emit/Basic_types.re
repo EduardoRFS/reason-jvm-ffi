@@ -167,7 +167,7 @@ module Env = {
   let set_functions =
     update_methods((env_functions, t) => {...t, env_functions});
 
-  let add_class = (class_name, lid) => {
+  let add_empty_class = (class_name, lid) => {
     let unsafe_class = concat_lid([lid, unsafe_lid("unsafe_t")]);
     let unsafe_jni_clazz = concat_lid([lid, unsafe_lid("unsafe_jni_clazz")]);
     let value = {
@@ -180,6 +180,17 @@ module Env = {
     };
     add(class_name, value);
   };
+  let add_class = (clazz: java_class, lid, t) => {
+    let name = clazz.name;
+    let lid = s => concat_lid([lid, Lident(s)]);
+    t
+    |> add_empty_class(name, lid("Class"))
+    |> set_fields(clazz.fields, lid("Fields"), name)
+    |> set_constructors(clazz.constructors, lid("Constructors"), name)
+    |> set_methods(clazz.methods, lid("Methods"), name)
+    |> set_functions(clazz.functions, lid("Functions"), name);
+  };
+
   let sub_lid = (a: Longident.t, b: Longident.t) => {
     // TODO: this code is terrible
     let rec starts_with = (a, b) =>
