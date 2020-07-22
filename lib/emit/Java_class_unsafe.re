@@ -39,6 +39,12 @@ let emit = t => {
       emit_fields(t);
     }
   ];
+  let declare_constructors = [%stri
+    module Constructors = {
+      %s
+      emit_methods(t.constructors);
+    }
+  ];
   let declare_methods = [%stri
     module Methods = {
       %s
@@ -80,6 +86,7 @@ let emit = t => {
     declare_self_alias,
     find_class,
     declare_fields,
+    declare_constructors,
     declare_methods,
     declare_functions,
     declare_class,
@@ -239,6 +246,9 @@ let emit_type = t => {
   let declare_fields = [%sigi:
     module Fields: {[%%s emit_fields_type(t.fields)];}
   ];
+  let declare_constructors = [%sigi:
+    module Constructors: {[%%s emit_methods_type(`Unsafe, t.constructors)];}
+  ];
   let declare_methods = [%sigi:
     module Methods: {[%%s emit_methods_type(`Unsafe, t.methods)];}
   ];
@@ -251,6 +261,7 @@ let emit_type = t => {
   let content = [
     declare_jni_class,
     declare_fields,
+    declare_constructors,
     declare_methods,
     declare_functions,
     delcare_class,

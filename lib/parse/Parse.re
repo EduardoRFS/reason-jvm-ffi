@@ -38,6 +38,7 @@ let jmethod_to_java_method = jmethod =>
     let signature = concrete_method.cm_signature;
 
     let java_name = ms_name(signature);
+    let name = java_name == "<init>" ? "make" : java_name;
     let java_signature =
       JPrint.method_signature(~jvm=true, signature)
       |> String.split_on_char(':')
@@ -58,7 +59,7 @@ let jmethod_to_java_method = jmethod =>
         let jcode = Lazy.force(jcode);
         jcode.c_local_variable_table |> Option.value(~default=[]);
       };
-    let java_parameters =
+    let parameters =
       ms_args(signature)
       |> List.mapi((index, value_type) => {
            // on non-static 0 is this, so that's why the offset
@@ -76,17 +77,17 @@ let jmethod_to_java_method = jmethod =>
            let java_type = value_type_to_java_type(value_type);
            (name, java_type);
          });
-    let java_return_type =
+    let return_type =
       ms_rtype(signature)
       |> Option.map(value_type_to_java_type)
       |> Option.value(~default=Void);
     Java_Method.{
       java_name,
       java_signature,
-      name: java_name,
+      name,
       kind,
-      parameters: java_parameters,
-      return_type: java_return_type,
+      parameters,
+      return_type,
     };
   };
 // TODO: methods and functions should be separated
@@ -148,6 +149,7 @@ let jclass_to_java_class = jclass => {
       |> List.partition((method: java_method) => method.kind == `Constructor);
     (functions, constructors, methods);
   };
+
   {
     java_name,
     name: java_name,
