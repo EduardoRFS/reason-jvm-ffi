@@ -88,6 +88,8 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
 };
 let emit_functor = (required_class, t) => {
   let env = emit_functor_env(required_class, t);
+  // open Unsafe.Please.Stop
+  let env = env |> Env.open_lid(unsafe_module_lid);
   let static_methods =
     t.functions
     |> List.map((method: java_method) => {
