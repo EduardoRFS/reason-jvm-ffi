@@ -51,21 +51,26 @@ let jmethod_to_java_method = jmethod =>
       | (false, "<init>") => `Constructor
       | (false, _) => `Method
       };
-    let variable_table =
+    let (variable_table, variable_type_table) =
       switch (concrete_method.cm_implementation) {
-      | Native => []
+      | Native => ([], [])
       | Java(jcode) =>
         open JCode;
         let jcode = Lazy.force(jcode);
-        jcode.c_local_variable_table |> Option.value(~default=[]);
+        let variable_table =
+          jcode.c_local_variable_table |> Option.value(~default=[]);
+        let variable_type_table =
+          jcode.c_local_variable_type_table |> Option.value(~default=[]);
+        (variable_table, variable_type_table);
       };
     let parameters =
       ms_args(signature)
       |> List.mapi((index, value_type) => {
+           // TODO: maybe we should use the index? Read the spec and also double is a problem
            // on non-static 0 is this, so that's why the offset
            let table_index = static ? index : index + 1;
            let name = {
-             let.some (_, _, name, received_value_type, _) =
+             let.some (_, _, name, received_value_type, index) =
                List.nth_opt(variable_table, table_index);
              if (value_type != received_value_type) {
                failwith("that is weird, look at value_type here");
@@ -75,7 +80,14 @@ let jmethod_to_java_method = jmethod =>
            let name =
              Option.value(~default="param_" ++ string_of_int(index), name);
            let java_type = value_type_to_java_type(value_type);
-           (name, java_type, `Normal);
+           // TODO: test generic with static and non static
+           let is_generic =
+             variable_type_table
+             |> List.exists(((_, _, _, _, table_index)) =>
+                  index == table_index
+                );
+
+           (name, java_type, is_generic ? `Generic : `Normal);
          });
     let return_type =
       ms_rtype(signature)
@@ -119,6 +131,7 @@ let class_field_to_java_field = class_field => {
   let java_type = fs_type(signature) |> value_type_to_java_type;
   {java_signature, name, static, type_: java_type};
 };
+
 let jclass_to_java_class = jclass => {
   let java_name = class_name_to_object_type(jclass.c_name);
   let extends = jclass.c_super_class |> Option.map(class_name_to_object_type);
