@@ -137,7 +137,7 @@ module Env = {
     update_methods((env_functions, t) => {...t, env_functions});
 
   let add_empty_class = (class_name, lid) => {
-    let unsafe_class = concat_lid([lid, unsafe_lid("unsafe_t")]);
+    let unsafe_class = concat_lid([lid, unsafe_lid("t")]);
     let unsafe_jni_clazz = concat_lid([lid, unsafe_lid("unsafe_jni_clazz")]);
     let value = {
       env_unsafe_class: unsafe_class,
