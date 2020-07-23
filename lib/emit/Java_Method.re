@@ -136,9 +136,14 @@ let emit_type = (kind, t) => {
   let parameters = {
     let parameters =
       t.parameters
-      |> List.rev_map(((name, value, _)) =>
-           (Labelled(name), Java_Type_Emit.emit_type(value))
-         );
+      |> List.mapi((index, (name, value, _)) =>
+           (
+             Labelled(name),
+             Java_Type_Emit.emit_type(~kind=`Parameter(index), value),
+           )
+         )
+      |> List.rev;
+
     let parameters =
       switch (parameters) {
       | [] => [(Nolabel, typ_unit)]

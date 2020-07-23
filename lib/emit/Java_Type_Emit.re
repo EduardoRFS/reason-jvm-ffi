@@ -12,6 +12,7 @@ module Object_Type_Emit = {
     lident(~modules, last_module);
   };
   let emit_lid = (id: t) => Ldot(emit_module_lid(id), "t");
+  let emit_sub_lid = (id: t) => Ldot(emit_module_lid(id), "sub");
   // TODO: improve that
   let emit_unsafe_lid = (id: t) =>
     Ldot(
@@ -22,9 +23,16 @@ module Object_Type_Emit = {
     let lid = emit_lid(id) |> Located.mk;
     ptyp_constr(lid, []);
   };
+  let emit_sub_type = (index, id: t) => {
+    // TODO: more than 26 parameters
+    let char = Char.chr(97 + index);
+    let name = String.make(1, char);
+    let lid = emit_sub_lid(id);
+    ptyp_constr(loc(lid), [ptyp_var(name)]);
+  };
 };
 
-let rec emit_type =
+let rec emit_type = (~kind=`Return) =>
   fun
   | Void => [%type: unit]
   | Boolean => [%type: bool]
@@ -36,7 +44,12 @@ let rec emit_type =
   | Long => [%type: int64]
   | Float => [%type: float]
   | Double => [%type: float]
-  | Object(object_type) => Object_Type_Emit.emit_type(object_type)
+  | Object(object_type) =>
+    switch (kind) {
+    | `Parameter(index) => Object_Type_Emit.emit_sub_type(index, object_type)
+    | _ => Object_Type_Emit.emit_type(object_type)
+    }
+
   | Array(java_type) => [%type: list([%t emit_type(java_type)])];
 
 let emit_camljava_jni_to_call = (kind, static, t) => {
