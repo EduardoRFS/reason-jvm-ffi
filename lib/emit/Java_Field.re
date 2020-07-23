@@ -6,14 +6,14 @@ type t = java_field;
 
 let emit_jni_field_access = (kind, t: java_field) =>
   Java_Type_Emit.emit_camljava_jni_to_call(kind, t.static, t.type_);
-let emit_make_reference = (clazz_id, object_id, field_id, t) => {
+let emit_make_reference = (env, clazz_id, object_id, field_id, t) => {
   let create_getter_or_setter = kind => {
     let returned_value =
       eapply(
         emit_jni_field_access(kind, t),
         [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
       );
-    unsafe_cast_returned_value(t.type_, returned_value);
+    unsafe_cast_returned_value(env, t.type_, returned_value);
   };
   let getter = create_getter_or_setter(`Getter);
   let getter = pexp_fun(Nolabel, None, punit, getter);
@@ -25,7 +25,7 @@ let object_id = "this";
 // TODO: escape these names + jni_class_name
 let field_id = "jni_fieldID";
 
-let emit = (jni_class_name, t: t) => {
+let emit = (jni_class_name, env, t: t) => {
   let declare_field_id =
     eapply(
       [%expr Jni.get_fieldID],
@@ -37,7 +37,7 @@ let emit = (jni_class_name, t: t) => {
     );
   let declare_function = {
     let make_reference =
-      emit_make_reference(jni_class_name, object_id, field_id, t);
+      emit_make_reference(env, jni_class_name, object_id, field_id, t);
     let parameter = t.static ? pvar(jni_class_name) : pvar(object_id);
     pexp_fun_helper([(Nolabel, parameter)], make_reference);
   };

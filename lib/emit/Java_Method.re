@@ -43,7 +43,8 @@ let emit_jni_method_name = t =>
     t.kind == `Function,
     t.return_type,
   );
-let emit_method_call = (clazz_id, object_id, method_id, args, t: java_method) => {
+let emit_method_call =
+    (env, clazz_id, object_id, method_id, args, t: java_method) => {
   let args = args |> List.map(emit_argument) |> pexp_array;
   let returned_value =
     eapply(
@@ -51,7 +52,7 @@ let emit_method_call = (clazz_id, object_id, method_id, args, t: java_method) =>
       [is_static(t) ? clazz_id : object_id, method_id, args],
     );
 
-  unsafe_cast_returned_value(t.return_type, returned_value);
+  unsafe_cast_returned_value(env, t.return_type, returned_value);
 };
 
 let object_id = "this";
@@ -68,7 +69,7 @@ let emit_jni_get_methodID = (jni_class_name, t: java_method) =>
     ],
   );
 
-let emit = (jni_class_name, t) => {
+let emit = (jni_class_name, env, t) => {
   // TODO: duplicated code between type and code
   let parameters = {
     let parameters =
@@ -88,6 +89,7 @@ let emit = (jni_class_name, t) => {
 
   let method_call =
     emit_method_call(
+      env,
       // TODO: proper solve the problem of recursion + jni class
       eapply(evar(jni_class_name), [eunit]),
       evar(object_id),

@@ -2,6 +2,7 @@ open Emit_Helper;
 open Basic_types;
 open Structures;
 open Java_class;
+open Lid;
 
 // TODO: keep same method order as in the bytecode
 
@@ -116,7 +117,7 @@ let emit_functor = (required_class, t) => {
     [@ocaml.warning "-33"]
     open Params;
     %s
-    [open_package, unsafe_module(Java_class_unsafe.emit(t))];
+    [open_package, unsafe_module(Java_class_unsafe.emit(env, t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s

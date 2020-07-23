@@ -3,6 +3,7 @@ open Basic_types;
 open Java_Type;
 open Java_class;
 open Structures;
+open Lid;
 
 // TODO: duplicated
 let emit_method_type = (kind, method: java_method) => {
@@ -17,44 +18,44 @@ let emit_method_type = (kind, method: java_method) => {
 let emit_methods_type = (kind, methods) =>
   methods |> List.map(emit_method_type(kind));
 let emit_field = Java_Field.emit(jni_class_name);
-let emit_fields = t =>
+let emit_fields = (env, t) =>
   t.fields
   |> List.map((field: java_field) => {
        let name = unsafe_name(field.name);
-       pstr_value_alias(name, emit_field(field));
+       pstr_value_alias(name, emit_field(env, field));
      });
 
 let emit_method = Java_Method.emit(jni_class_name);
-let emit_methods = methods =>
+let emit_methods = (env, methods) =>
   methods
   |> List.map((method: java_method) => {
        let name = unsafe_name(method.name);
-       pstr_value_alias(name, emit_method(method));
+       pstr_value_alias(name, emit_method(env, method));
      });
 
-let emit = t => {
+let emit = (env, t) => {
   let declare_fields = [%stri
     module Fields = {
       %s
-      emit_fields(t);
+      emit_fields(env, t);
     }
   ];
   let declare_constructors = [%stri
     module Constructors = {
       %s
-      emit_methods(t.constructors);
+      emit_methods(env, t.constructors);
     }
   ];
   let declare_methods = [%stri
     module Methods = {
       %s
-      emit_methods(t.methods);
+      emit_methods(env, t.methods);
     }
   ];
   let declare_functions = [%stri
     module Static = {
       %s
-      emit_methods(t.functions);
+      emit_methods(env, t.functions);
     }
   ];
   let include_class_declaration =
