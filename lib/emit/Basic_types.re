@@ -36,7 +36,7 @@ type java_method = {
   java_signature: string,
   name: string,
   kind: [ | `Constructor | `Method | `Function],
-  parameters: list((string, java_type)),
+  parameters: list((string, java_type, [ | `Normal | `Generic])),
   return_type: java_type,
 };
 

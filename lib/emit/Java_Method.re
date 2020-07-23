@@ -7,12 +7,12 @@ let is_static = t => t.kind == `Function;
 
 let find_required_classes = t =>
   List.concat_map(
-    ((_, java_type)) => Java_Type.find_required_class(java_type),
+    ((_, java_type, _)) => Java_Type.find_required_class(java_type),
     t.parameters,
   )
   @ Java_Type.find_required_class(t.return_type);
 
-let emit_argument = ((name, java_type)) => {
+let emit_argument = ((name, java_type, _)) => {
   let identifier = evar(name);
   let read_expr =
     switch (java_type) {
@@ -97,7 +97,7 @@ let emit = (jni_class_name, env, t) => {
   let parameters = {
     let parameters =
       t.parameters
-      |> List.rev_map(((name, _)) => (Labelled(name), pvar(name)));
+      |> List.rev_map(((name, _, _)) => (Labelled(name), pvar(name)));
     let parameters =
       switch (parameters) {
       | [] => [(Nolabel, punit)]
@@ -136,7 +136,7 @@ let emit_type = (kind, t) => {
   let parameters = {
     let parameters =
       t.parameters
-      |> List.rev_map(((name, value)) =>
+      |> List.rev_map(((name, value, _)) =>
            (Labelled(name), Java_Type_Emit.emit_type(value))
          );
     let parameters =

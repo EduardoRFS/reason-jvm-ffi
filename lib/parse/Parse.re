@@ -75,7 +75,7 @@ let jmethod_to_java_method = jmethod =>
            let name =
              Option.value(~default="param_" ++ string_of_int(index), name);
            let java_type = value_type_to_java_type(value_type);
-           (name, java_type);
+           (name, java_type, `Normal);
          });
     let return_type =
       ms_rtype(signature)
