@@ -58,9 +58,8 @@ module Java_Env =
     let compare = compare_class_name;
   });
 
-module Structures = {
+module Lid = {
   open Emit_Helper;
-
   // TODO: do this properly because apply
   let concat_lid = lids =>
     lids |> List.map(Longident.name) |> String.concat(".") |> Longident.parse;
@@ -91,37 +90,7 @@ module Structures = {
       Lident("Class"),
       unsafe_lid("t"),
     ]);
-  let unsafe_module = content => [%stri
-    module Unsafe = {
-      module Please = {
-        module Stop = {
-          %s
-          content;
-        };
-      };
-    }
-  ];
-  let unsafe_module_type = content => [%sigi:
-    module Unsafe: {module Please: {module Stop: {[%%s content];};};}
-  ];
-
-  let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
-
-  let unsafe_class_cast = (class_name, jobj) => {
-    let new_fn = pexp_new(unsafe_class_lid(class_name) |> loc);
-    eapply(new_fn, [jobj]);
-  };
-
-  // TODO: should we trust the Java return? I have a bad feeling on that
-  let unsafe_cast_returned_value = (return_type, returned_value) => {
-    switch (return_type) {
-    | Object(class_name) => unsafe_class_cast(class_name, returned_value)
-    | Array(_) => failwith("TODO: too much work bro")
-    | _ => returned_value
-    };
-  };
 };
-
 module Env = {
   module StringMap = Map.Make(String);
   let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
@@ -139,7 +108,7 @@ module Env = {
     env_functions: StringMap.t(Longident.t),
   };
 
-  open Structures;
+  open Lid;
   let update_name = (value, f, name, t) =>
     // TODO: what if doesn't exists
     t |> add(name, f(value, find(name, t)));
@@ -242,4 +211,40 @@ module Env = {
   let constructor_lid = find_lid(value => value.env_constructors);
   let method_lid = find_lid(value => value.env_methods);
   let function_lid = find_lid(value => value.env_functions);
+};
+
+module Structures = {
+  open Env;
+  open Emit_Helper;
+
+  let unsafe_module = content => [%stri
+    module Unsafe = {
+      module Please = {
+        module Stop = {
+          %s
+          content;
+        };
+      };
+    }
+  ];
+  let unsafe_module_type = content => [%sigi:
+    module Unsafe: {module Please: {module Stop: {[%%s content];};};}
+  ];
+
+  let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
+
+  let unsafe_class_cast = (env, class_name, jobj) => {
+    let lid = unsafe_class_lid(class_name, env) |> loc;
+    eapply(pexp_new(lid), [jobj]);
+  };
+
+  // TODO: should we trust the Java return? I have a bad feeling on that
+  let unsafe_cast_returned_value = (env, return_type, returned_value) => {
+    switch (return_type) {
+    | Object(class_name) =>
+      unsafe_class_cast(env, class_name, returned_value)
+    | Array(_) => failwith("TODO: too much work bro")
+    | _ => returned_value
+    };
+  };
 };
