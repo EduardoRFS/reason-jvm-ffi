@@ -53,7 +53,7 @@ let emit = (env, t) => {
     }
   ];
   let declare_functions = [%stri
-    module Static = {
+    module Functions = {
       %s
       emit_methods(env, t.functions);
     }
@@ -276,7 +276,7 @@ let emit_type = t => {
     module Methods: {[%%s emit_methods_type(`Unsafe, t.methods)];}
   ];
   let declare_functions = [%sigi:
-    module Static: {[%%s emit_methods_type(`Unsafe, t.functions)];}
+    module Functions: {[%%s emit_methods_type(`Unsafe, t.functions)];}
   ];
   let delcare_class = [%sigi:
     module Class: {[%%s [psig_class([emit_class_type(t)])]];}
