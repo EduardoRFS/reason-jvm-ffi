@@ -180,11 +180,16 @@ module Env = {
     };
     add(class_name, value);
   };
-  let add_class = (clazz: java_class, lid, t) => {
+  let add_class = (~class_lid=None, clazz: java_class, lid, t) => {
     let name = clazz.name;
     let lid = s => concat_lid([lid, Lident(s)]);
+    let class_lid =
+      switch (class_lid) {
+      | Some(class_lid) => class_lid
+      | None => lid("Classs")
+      };
     t
-    |> add_empty_class(name, lid("Class"))
+    |> add_empty_class(name, class_lid)
     |> set_fields(clazz.fields, lid("Fields"), name)
     |> set_constructors(clazz.constructors, lid("Constructors"), name)
     |> set_methods(clazz.methods, lid("Methods"), name)

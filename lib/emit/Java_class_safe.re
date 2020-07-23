@@ -21,8 +21,14 @@ let emit_functor_env = (required_classes, t: java_class) => {
     let lid = concat_lid([class_lid(clazz.name), unsafe_module_lid]);
     env |> Env.add_class(clazz, lid);
   };
-  let add_self = (self: java_class) =>
-    Env.add_empty_class(self.name, class_lid(self.name));
+  let add_self = (self: java_class, env) => {
+    env
+    |> Env.add_class(
+         ~class_lid=Some(class_lid(self.name)),
+         self,
+         unsafe_module_lid,
+       );
+  };
   required_classes |> List.fold_left(add_class, Env.empty) |> add_self(t);
 };
 let emit_functor_parameters_type = (required_classes, self: java_class) => {
