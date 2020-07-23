@@ -105,7 +105,11 @@ let emit_functor = (required_class, t) => {
       concat_lid([unsafe_module_lid, Lident("Class"), unsafe_lid("t")]),
     );
   let safe_values =
-    List.concat([[type_value], constructors, static_methods]);
+    List.concat([
+      [type_value, [%stri type sub('a) = {.. ...t} as 'a]],
+      constructors,
+      static_methods,
+    ]);
 
   let open_package = pstr_open_alias(package_lid(t.java_name.package));
   let content = [%str
@@ -167,7 +171,11 @@ let emit_module_type = t => {
   let type_declaration = psig_type_alias("t", unsafe_class_lid(t.name));
   let signature =
     List.concat([
-      [Java_class_unsafe.emit_type(t), type_declaration],
+      [
+        Java_class_unsafe.emit_type(t),
+        type_declaration,
+        [%sigi: type sub('a) = {.. ...t} as 'a],
+      ],
       constructors,
       functions,
     ]);
