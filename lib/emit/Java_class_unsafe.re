@@ -115,7 +115,7 @@ let emit_class = (env, t) => {
          pcf_method((
            Located.mk(name),
            Public,
-           Cfk_concrete(Fresh, emit_curried_method(method)),
+           Cfk_concrete(Fresh, emit_curried_method(t.name, env, method)),
          ))
        );
   let inheritance_field = {

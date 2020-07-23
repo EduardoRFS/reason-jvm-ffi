@@ -25,9 +25,11 @@ let find_required_classes = t => {
 let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
-let emit_curried_method = method => {
+let emit_curried_method = (clazz, env, method) => {
   let static = Java_Method.is_static(method);
-  let modules = static ? ["Static"] : ["Methods"];
+  let find_lid = static ? Env.function_lid : Env.method_lid;
+  print_endline(method.name);
+  let lid = find_lid(clazz, method.name, env) |> loc |> pexp_ident;
   let arg = static ? evar(jni_class_name) : evar(object_id);
-  eapply(evar(~modules, unsafe_name(method.name)), [arg]);
+  eapply(lid, [arg]);
 };

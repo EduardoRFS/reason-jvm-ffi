@@ -81,12 +81,15 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
   pmty_signature([open_javatype, ...modules]);
 };
 let emit_functor = (required_class, t) => {
-  let _env = emit_functor_env(required_class, t);
+  let env = emit_functor_env(required_class, t);
   let static_methods =
     t.functions
-    |> List.map((method: java_method) =>
-         pstr_value_alias(method.name, emit_curried_method(method))
-       );
+    |> List.map((method: java_method) => {
+         pstr_value_alias(
+           method.name,
+           emit_curried_method(t.name, env, method),
+         )
+       });
   let constructors =
     t.constructors
     |> List.map((method: java_method) =>
