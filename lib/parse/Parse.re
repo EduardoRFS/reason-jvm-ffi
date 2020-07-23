@@ -130,7 +130,14 @@ let jclass_to_java_class = jclass => {
   let methods =
     jclass.c_methods
     |> MethodMap.value_elements
-    |> List.map(jmethod_to_java_method)
+    |> List.map(jmethod => {
+         let java_method = jmethod_to_java_method(jmethod);
+         let return_type =
+           java_method.kind == `Constructor
+             ? Object(java_name) : java_method.return_type;
+
+         {...java_method, return_type};
+       })
     |> escape_duplicated_names(
          (method: java_method, method') =>
            method.java_name == method'.java_name,

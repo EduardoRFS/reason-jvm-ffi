@@ -167,14 +167,15 @@ let emit_methods_type = (kind, methods) =>
   methods |> List.map(emit_method_type(kind));
 
 let emit_module_type = t => {
-  let functions = List.filter(Java_Method.is_static, t.functions);
-  let functions = emit_methods_type(`Method, functions);
+  let constructors = emit_methods_type(`Method, t.constructors);
+  let functions = emit_methods_type(`Method, t.functions);
   let type_declaration = psig_type_alias("t", unsafe_class_lid(t.name));
   let signature =
-    List.append(
+    List.concat([
       [Java_class_unsafe.emit_type(t), type_declaration],
+      constructors,
       functions,
-    );
+    ]);
   module_declaration(
     ~name=Located.mk(Some(t.name.name)),
     ~type_=pmty_signature(signature),
