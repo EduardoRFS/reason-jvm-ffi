@@ -41,16 +41,39 @@ let emit_jni_method_name = t =>
   Java_Type_Emit.emit_camljava_jni_to_call(
     `Method,
     t.kind == `Function,
-    t.return_type,
+    t.kind == `Constructor ? Void : t.return_type,
   );
 let emit_method_call =
     (env, clazz_id, object_id, method_id, args, t: java_method) => {
   let args = args |> List.map(emit_argument) |> pexp_array;
-  let returned_value =
+  let call_method =
     eapply(
       emit_jni_method_name(t),
-      [is_static(t) ? clazz_id : object_id, method_id, args],
+      [is_static(t) ? clazz_id : evar(object_id), method_id, args],
     );
+  let returned_value =
+    switch (t.kind) {
+    | `Constructor =>
+      let call_return =
+        pexp_let(
+          Nonrecursive,
+          [value_binding(~pat=punit, ~expr=call_method)],
+          evar(object_id),
+        );
+      let allocate_object =
+        pexp_let(
+          Nonrecursive,
+          [
+            value_binding(
+              ~pat=pvar(object_id),
+              ~expr=[%expr Jni.alloc_object([%e clazz_id])],
+            ),
+          ],
+          call_return,
+        );
+      allocate_object;
+    | _ => call_method
+    };
 
   unsafe_cast_returned_value(env, t.return_type, returned_value);
 };
@@ -81,18 +104,19 @@ let emit = (jni_class_name, env, t) => {
       | parameters => parameters
       };
     let additional_parameter =
-      is_static(t)
-        ? [(Nolabel, pvar(jni_class_name))]
-        : [(Nolabel, pvar(object_id))];
+      switch (t.kind) {
+      | `Constructor => []
+      | `Method => [(Nolabel, pvar(object_id))]
+      | `Function => [(Nolabel, pvar(jni_class_name))]
+      };
     List.append(additional_parameter, parameters);
   };
 
   let method_call =
     emit_method_call(
       env,
-      // TODO: proper solve the problem of recursion + jni class
       eapply(evar(jni_class_name), [eunit]),
-      evar(object_id),
+      object_id,
       evar(method_id),
       t.parameters,
       t,
@@ -121,10 +145,11 @@ let emit_type = (kind, t) => {
       | parameters => parameters
       };
     let additional_parameter =
-      switch (kind, is_static(t)) {
-      | (`Method, _) => []
-      | (`Unsafe, true) => [(Nolabel, [%type: unit => Jni.clazz])]
-      | (`Unsafe, false) => [(Nolabel, [%type: Jni.obj])]
+      switch (kind, t.kind, is_static(t)) {
+      | (_, `Constructor, _)
+      | (`Method, _, _) => []
+      | (`Unsafe, _, true) => [(Nolabel, [%type: unit => Jni.clazz])]
+      | (`Unsafe, _, false) => [(Nolabel, [%type: Jni.obj])]
       };
     List.append(additional_parameter, parameters);
   };

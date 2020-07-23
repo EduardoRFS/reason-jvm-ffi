@@ -6,16 +6,11 @@ open Lid;
 
 // TODO: keep same method order as in the bytecode
 
-let emit_constructor = (constructor: java_method) => {
-  let alloc_object =
-    eapply(
-      [%expr Jni.alloc_object],
-      [eapply(evar(jni_class_name), [eunit])],
-    );
-  let unsafe_constructor_to_call =
-    concat_lid([Lident("Constructors"), unsafe_lid(constructor.name)]);
-  eapply(pexp_ident(loc(unsafe_constructor_to_call)), [alloc_object]);
-};
+let emit_constructor = (class_name, env, constructor: java_method) =>
+  env
+  |> Env.constructor_lid(class_name, constructor.name)
+  |> loc
+  |> pexp_ident;
 
 let emit_functor_env = (required_classes, t: java_class) => {
   let add_class = (env, clazz: java_class) => {
@@ -102,7 +97,7 @@ let emit_functor = (required_class, t) => {
   let constructors =
     t.constructors
     |> List.map((method: java_method) =>
-         pstr_value_alias(method.name, emit_constructor(method))
+         pstr_value_alias(method.name, emit_constructor(t.name, env, method))
        );
   let type_value =
     pstr_type_alias(
