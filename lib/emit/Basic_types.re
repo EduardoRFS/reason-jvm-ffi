@@ -4,6 +4,24 @@ type class_name = {
   name: string,
 };
 
+module EnvMap = {
+  module StringMap = Map.Make(String);
+  include Map.Make({
+    type t = class_name;
+    let compare = compare_class_name;
+  });
+  let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
+
+  type value = {
+    env_unsafe_class: Longident.t,
+    env_jni_class: Longident.t,
+    env_fields: StringMap.t(Longident.t),
+    env_constructors: StringMap.t(Longident.t),
+    env_methods: StringMap.t(Longident.t),
+    env_functions: StringMap.t(Longident.t),
+  };
+};
+
 type java_type =
   // TODO: remove void
   | Void
@@ -38,15 +56,13 @@ type parameter = {
 
 // TODO: access
 type java_method = {
-  java_name: string,
-  java_signature: string,
   required_classes: list(class_name),
   signature: Parsetree.core_type,
+  call_jni:
+    (~clazz: Parsetree.expression, EnvMap.t(EnvMap.value)) =>
+    Parsetree.expression,
   name: string,
   kind: [ | `Constructor | `Method | `Function],
-  this: option(parameter),
-  parameters: list(parameter),
-  return_type: java_type,
 };
 
 // TODO: access
@@ -99,22 +115,9 @@ module Lid = {
       unsafe_lid("t"),
     ]);
 };
-module Env = {
-  module StringMap = Map.Make(String);
-  let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
-  include Map.Make({
-    type t = class_name;
-    let compare = compare_class_name;
-  });
 
-  type value = {
-    env_unsafe_class: Longident.t,
-    env_jni_class: Longident.t,
-    env_fields: StringMap.t(Longident.t),
-    env_constructors: StringMap.t(Longident.t),
-    env_methods: StringMap.t(Longident.t),
-    env_functions: StringMap.t(Longident.t),
-  };
+module Env = {
+  include EnvMap;
 
   open Lid;
   let update_name = (value, f, name, t) =>

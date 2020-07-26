@@ -6,6 +6,16 @@ open Structures;
 type parameter = Basic_types.parameter;
 type t = java_method;
 
+// TODO: this seems hackish as hell
+type internal_t = {
+  java_name: string,
+  java_signature: string,
+  name: string,
+  kind: [ | `Constructor | `Method | `Function],
+  this: option(parameter),
+  parameters: list(parameter),
+  return_type: java_type,
+};
 let is_static = kind => kind == `Function;
 
 let find_required_classes = (parameters, return_type) =>
@@ -89,33 +99,14 @@ let emit_type = (parameters, return_type) => {
   ptyp_arrow_helper(parameters, return_type);
 };
 
-let make =
-    (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
-  let required_classes = find_required_classes(parameters, return_type);
-  let (this, parameters) = parse_parameters(kind, parameters);
-
-  let signature = emit_type(parameters, return_type);
-
-  {
-    java_name,
-    java_signature,
-    required_classes,
-    signature,
-    name,
-    kind,
-    this,
-    parameters,
-    return_type,
-  };
-};
-
-let emit_jni_method_name = t =>
+let emit_jni_method_name = (t: internal_t) =>
   Java_Type_Emit.emit_camljava_jni_to_call(
     `Method,
     t.kind == `Function,
     t.kind == `Constructor ? Void : t.return_type,
   );
-let emit_method_call = (env, clazz_id, object_id, method_id, args, t: t) => {
+let emit_method_call =
+    (env, clazz_id, object_id, method_id, args, t: internal_t) => {
   let args =
     args |> List.filter_map(param => param.jni_argument) |> pexp_array;
   let call_method =
@@ -154,40 +145,27 @@ let object_id = "this";
 // TODO: escape these names + jni_class_name
 let method_id = "jni_methodID";
 
-let emit_jni_get_methodID = (jni_class_name, t: t) =>
+let emit_jni_get_methodID = (clazz, t: internal_t) =>
   eapply(
     is_static(t.kind)
       ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
-    [
-      eapply(evar(jni_class_name), [eunit]),
-      estring(t.java_name),
-      t.java_signature |> estring,
-    ],
+    [clazz, estring(t.java_name), t.java_signature |> estring],
   );
 
-let emit = (jni_class_name, env, t) => {
-  // TODO: duplicated code between type and code
+let emit_call_jni = (t: internal_t, ~clazz, env) => {
   let parameters = {
     let parameters =
-      t.parameters |> List.rev_map(({label, pat, _}) => (label, pat));
-    let parameters =
-      switch (parameters) {
-      | [] => [(Nolabel, punit)]
-      | parameters => parameters
-      };
-    let additional_parameter =
-      switch (t.kind) {
-      | `Constructor => []
-      | `Method => [(Nolabel, pvar(object_id))]
-      | `Function => [(Nolabel, pvar(jni_class_name))]
-      };
-    List.append(additional_parameter, parameters);
+      t.parameters |> List.map(({label, pat, _}) => (label, pat));
+    switch (t.this) {
+    | Some({label, pat, _}) => [(label, pat), ...parameters]
+    | None => parameters
+    };
   };
 
   let method_call =
     emit_method_call(
       env,
-      eapply(evar(jni_class_name), [eunit]),
+      clazz,
       object_id,
       evar(method_id),
       t.parameters,
@@ -199,7 +177,27 @@ let emit = (jni_class_name, env, t) => {
 
   pexp_let_alias(
     method_id,
-    emit_jni_get_methodID(jni_class_name, t),
+    emit_jni_get_methodID(clazz, t),
     declare_function,
   );
+};
+
+let make =
+    (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
+  let required_classes = find_required_classes(parameters, return_type);
+  let (this, parameters) = parse_parameters(kind, parameters);
+
+  let internal_t = {
+    java_name,
+    java_signature,
+    name,
+    kind,
+    parameters,
+    this,
+    return_type,
+  };
+
+  let signature = emit_type(parameters, return_type);
+  let call_jni = emit_call_jni(internal_t);
+  {required_classes, signature, call_jni, name, kind};
 };

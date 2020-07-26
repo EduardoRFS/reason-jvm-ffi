@@ -31,7 +31,7 @@ let rec value_type_to_java_type =
   | TObject(TArray(value_type)) =>
     Array(value_type_to_java_type(value_type));
 
-let jmethod_to_java_method = jmethod =>
+let jmethod_to_java_method = (class_name, jmethod) =>
   switch (jmethod) {
   | AbstractMethod(_) => failwith("sorry man, not abstract here")
   | ConcreteMethod(concrete_method) =>
@@ -90,9 +90,13 @@ let jmethod_to_java_method = jmethod =>
            (name, java_type);
          });
     let return_type =
-      ms_rtype(signature)
-      |> Option.map(value_type_to_java_type)
-      |> Option.value(~default=Void);
+      switch (kind) {
+      | `Constructor => Object(class_name)
+      | _ =>
+        ms_rtype(signature)
+        |> Option.map(value_type_to_java_type)
+        |> Option.value(~default=Void)
+      };
     Java_Method.make(
       ~java_name,
       ~java_signature,
@@ -143,22 +147,11 @@ let jclass_to_java_class = jclass => {
   let methods =
     jclass.c_methods
     |> MethodMap.value_elements
-    |> List.map(jmethod => {
-         let java_method = jmethod_to_java_method(jmethod);
-         let return_type =
-           java_method.kind == `Constructor
-             ? Object(java_name) : java_method.return_type;
-
-         {...java_method, return_type};
-       })
+    |> List.map(jmethod => jmethod_to_java_method(java_name, jmethod))
     |> escape_duplicated_names(
-         (method: java_method, method') =>
-           method.java_name == method'.java_name,
+         (method: java_method, method') => method.name == method'.name,
          (index, method) =>
-           {
-             ...method,
-             name: method.java_name ++ "_" ++ string_of_int(index),
-           },
+           {...method, name: method.name ++ "_" ++ string_of_int(index)},
        );
   let (functions, constructors, methods) = {
     let (functions, methods) =

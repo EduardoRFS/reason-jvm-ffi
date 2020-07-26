@@ -25,7 +25,8 @@ let emit_fields = (env, t) =>
        pstr_value_alias(name, emit_field(env, field));
      });
 
-let emit_method = Java_Method.emit(jni_class_name);
+let emit_method = (env, method) =>
+  method.call_jni(~clazz=evar(jni_class_name), env);
 let emit_methods = (env, methods) =>
   methods
   |> List.map((method: java_method) => {
