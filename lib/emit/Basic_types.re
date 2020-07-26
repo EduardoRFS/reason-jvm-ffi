@@ -41,6 +41,7 @@ type java_method = {
   java_name: string,
   java_signature: string,
   required_classes: list(class_name),
+  signature: Parsetree.core_type,
   name: string,
   kind: [ | `Constructor | `Method | `Function],
   this: option(parameter),

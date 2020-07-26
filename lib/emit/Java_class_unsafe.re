@@ -10,7 +10,7 @@ let emit_method_type = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
   value_description(
     ~name=Located.mk(name),
-    ~type_=Java_Method.emit_type(kind, method),
+    ~type_=method.signature,
     ~prim=[],
   )
   |> psig_value;
@@ -234,12 +234,7 @@ let emit_class_type = t => {
   let method_fields =
     t.methods
     |> List.map(({name, _} as method: java_method) =>
-         pctf_method((
-           Located.mk(name),
-           Public,
-           Concrete,
-           Java_Method.emit_type(`Method, method),
-         ))
+         pctf_method((Located.mk(name), Public, Concrete, method.signature))
        );
   let class_fields =
     List.concat([

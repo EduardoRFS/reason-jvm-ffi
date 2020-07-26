@@ -157,7 +157,7 @@ let emit_method_type = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
   value_description(
     ~name=Located.mk(name),
-    ~type_=Java_Method.emit_type(kind, method),
+    ~type_=method.signature,
     ~prim=[],
   )
   |> psig_value;

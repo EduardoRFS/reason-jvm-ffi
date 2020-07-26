@@ -82,14 +82,25 @@ let parse_parameters = (kind, parameters) => {
   (additional, parameters);
 };
 
+let emit_type = (parameters, return_type) => {
+  let parameters =
+    parameters |> List.map(({label, typ, _}) => (label, typ));
+  let return_type = Java_Type_Emit.emit_type(return_type);
+  ptyp_arrow_helper(parameters, return_type);
+};
+
 let make =
     (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
   let required_classes = find_required_classes(parameters, return_type);
   let (this, parameters) = parse_parameters(kind, parameters);
+
+  let signature = emit_type(parameters, return_type);
+
   {
     java_name,
     java_signature,
     required_classes,
+    signature,
     name,
     kind,
     this,
@@ -191,29 +202,4 @@ let emit = (jni_class_name, env, t) => {
     emit_jni_get_methodID(jni_class_name, t),
     declare_function,
   );
-};
-
-let emit_type = (kind, t) => {
-  let parameters = {
-    let parameters =
-      t.parameters
-      |> List.map(({label, typ, _}) => (label, typ))
-      |> List.rev;
-
-    let parameters =
-      switch (parameters) {
-      | [] => [(Nolabel, typ_unit)]
-      | parameters => parameters
-      };
-    let additional_parameter =
-      switch (kind, t.kind, is_static(t.kind)) {
-      | (_, `Constructor, _)
-      | (`Method, _, _) => []
-      | (`Unsafe, _, true) => [(Nolabel, [%type: unit => Jni.clazz])]
-      | (`Unsafe, _, false) => [(Nolabel, [%type: Jni.obj])]
-      };
-    List.append(additional_parameter, parameters);
-  };
-  let return_type = Java_Type_Emit.emit_type(t.return_type);
-  ptyp_arrow_helper(parameters, return_type);
 };
