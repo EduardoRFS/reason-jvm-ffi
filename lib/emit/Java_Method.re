@@ -3,6 +3,8 @@ open Emit_Helper;
 open Basic_types;
 open Structures;
 
+// TODO: look at names to escape these names + jni_class_name
+
 type parameter = Basic_types.parameter;
 
 // TODO: this seems hackish as hell
@@ -104,52 +106,35 @@ let emit_jni_method_name = (t: internal_t) =>
     t.kind == `Function,
     t.kind == `Constructor ? Void : t.return_type,
   );
-let emit_method_call =
-    (env, clazz_id, object_id, method_id, args, t: internal_t) => {
+let emit_method_call = (env, clazz_id, args, t: internal_t) => {
+  let name = (Labelled("name"), estring(t.java_name));
+  let signature = (Labelled("signature"), estring(t.java_signature));
+  let method_to_call = (Nolabel, emit_jni_method_name(t));
+  let this =
+    switch (t.this) {
+    | Some(this) => this.expr
+    | None => clazz_id
+    };
+  let this = (Nolabel, this);
   let args =
     args |> List.filter_map(param => param.jni_argument) |> pexp_array;
+  let args = (Nolabel, args);
+
   let call_method =
-    eapply(
-      emit_jni_method_name(t),
-      [is_static(t.kind) ? clazz_id : evar(object_id), method_id, args],
+    pexp_apply(
+      switch (t.kind) {
+      | `Constructor => id([%expr JavaFFI.call_constructor])
+      | `Method => id([%expr JavaFFI.call_method])
+      | `Function => id([%expr JavaFFI.call_function])
+      },
+      switch (t.kind) {
+      | `Constructor => [signature, method_to_call, args]
+      | _ => [name, signature, method_to_call, this, args]
+      },
     );
-  let returned_value =
-    switch (t.kind) {
-    | `Constructor =>
-      let call_return =
-        pexp_let(
-          Nonrecursive,
-          [value_binding(~pat=punit, ~expr=call_method)],
-          evar(object_id),
-        );
-      let allocate_object =
-        pexp_let(
-          Nonrecursive,
-          [
-            value_binding(
-              ~pat=pvar(object_id),
-              ~expr=[%expr Jni.alloc_object([%e clazz_id])],
-            ),
-          ],
-          call_return,
-        );
-      allocate_object;
-    | _ => call_method
-    };
 
-  unsafe_cast_returned_value(env, t.return_type, returned_value);
+  unsafe_cast_returned_value(env, t.return_type, call_method);
 };
-
-let object_id = "this";
-// TODO: escape these names + jni_class_name
-let method_id = "jni_methodID";
-
-let emit_jni_get_methodID = (clazz, t: internal_t) =>
-  eapply(
-    is_static(t.kind)
-      ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
-    [clazz, estring(t.java_name), t.java_signature |> estring],
-  );
 
 let emit_call_jni = (t: internal_t, ~clazz, env) => {
   let parameters = {
@@ -161,24 +146,10 @@ let emit_call_jni = (t: internal_t, ~clazz, env) => {
     };
   };
 
-  let method_call =
-    emit_method_call(
-      env,
-      clazz,
-      object_id,
-      evar(method_id),
-      t.parameters,
-      t,
-    );
+  let method_call = emit_method_call(env, clazz, t.parameters, t);
 
   // parameters => method_call
-  let declare_function = pexp_fun_helper(parameters, method_call);
-
-  pexp_let_alias(
-    method_id,
-    emit_jni_get_methodID(clazz, t),
-    declare_function,
-  );
+  pexp_fun_helper(parameters, method_call);
 };
 
 let make =
