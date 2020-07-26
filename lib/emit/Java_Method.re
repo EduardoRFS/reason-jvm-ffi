@@ -8,12 +8,14 @@ type t = java_method;
 
 let is_static = kind => kind == `Function;
 
-let find_required_classes = t =>
-  List.concat_map(
-    ({java_type, _}) => Java_Type.find_required_class(java_type),
-    t.parameters,
+let find_required_classes = (parameters, return_type) =>
+  (
+    parameters
+    |> List.concat_map(((_, java_type)) =>
+         Java_Type.find_required_class(java_type)
+       )
   )
-  @ Java_Type.find_required_class(t.return_type);
+  @ Java_Type.find_required_class(return_type);
 
 let emit_argument = (identifier, java_type) => {
   let read_expr =
@@ -82,8 +84,18 @@ let parse_parameters = (kind, parameters) => {
 
 let make =
     (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
+  let required_classes = find_required_classes(parameters, return_type);
   let (this, parameters) = parse_parameters(kind, parameters);
-  {java_name, java_signature, name, kind, this, parameters, return_type};
+  {
+    java_name,
+    java_signature,
+    required_classes,
+    name,
+    kind,
+    this,
+    parameters,
+    return_type,
+  };
 };
 
 let emit_jni_method_name = t =>

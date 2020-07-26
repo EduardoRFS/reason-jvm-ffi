@@ -18,7 +18,7 @@ let find_required_classes = t => {
     | None => []
     };
   let methods =
-    t.methods |> List.concat_map(Java_Method.find_required_classes);
+    t.methods |> List.concat_map(method => method.required_classes);
   extends @ methods;
 };
 
