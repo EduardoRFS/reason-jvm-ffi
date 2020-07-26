@@ -1,10 +1,9 @@
-[@deriving (show, eq, ord)]
+[@deriving (eq, ord)]
 type class_name = {
   package: list(string),
   name: string,
 };
 
-[@deriving show]
 type java_type =
   // TODO: remove void
   | Void
@@ -21,7 +20,6 @@ type java_type =
   | Array(java_type);
 
 // TODO: access, final and static
-[@deriving show]
 type java_field = {
   java_signature: string,
   name: string,
@@ -29,19 +27,26 @@ type java_field = {
   type_: java_type,
 };
 
+type parameter = {
+  label: Asttypes.arg_label,
+  pat: Parsetree.pattern,
+  expr: Parsetree.expression,
+  typ: Parsetree.core_type,
+  java_type // TODO: remove this in the future
+};
+
 // TODO: access
-[@deriving show]
 type java_method = {
   java_name: string,
   java_signature: string,
   name: string,
   kind: [ | `Constructor | `Method | `Function],
-  parameters: list((string, java_type, [ | `Normal | `Generic])),
+  this: option(parameter),
+  parameters: list(parameter),
   return_type: java_type,
 };
 
 // TODO: access
-[@deriving show]
 type java_class = {
   java_name: class_name,
   name: class_name,

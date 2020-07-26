@@ -81,26 +81,26 @@ let jmethod_to_java_method = jmethod =>
              Option.value(~default="param_" ++ string_of_int(index), name);
            let java_type = value_type_to_java_type(value_type);
            // TODO: test generic with static and non static
-           let is_generic =
+           let _is_generic =
              variable_type_table
              |> List.exists(((_, _, _, _, table_index)) =>
                   index == table_index
                 );
 
-           (name, java_type, is_generic ? `Generic : `Normal);
+           (name, java_type);
          });
     let return_type =
       ms_rtype(signature)
       |> Option.map(value_type_to_java_type)
       |> Option.value(~default=Void);
-    Java_Method.{
-      java_name,
-      java_signature,
-      name,
-      kind,
-      parameters,
-      return_type,
-    };
+    Java_Method.make(
+      ~java_name,
+      ~java_signature,
+      ~name,
+      ~kind,
+      ~parameters,
+      ~return_type,
+    );
   };
 // TODO: methods and functions should be separated
 let escape_duplicated_names = (compare, transform, list) =>
