@@ -39,6 +39,7 @@ type java_type =
 
 // TODO: access, final and static
 type java_field = {
+  signature: Parsetree.core_type,
   java_signature: string,
   name: string,
   static: bool,

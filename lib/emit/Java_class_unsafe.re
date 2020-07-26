@@ -209,7 +209,7 @@ let emit_fields_type = fields =>
        let name = field.static ? field.name : unsafe_name(field.name);
        value_description(
          ~name=Located.mk(name),
-         ~type_=Java_Field.emit_type(`Unsafe, field),
+         ~type_=field.signature,
          ~prim=[],
        )
        |> psig_value;
@@ -225,12 +225,7 @@ let emit_class_type = t => {
   let java_fields =
     t.fields
     |> List.map(({name, _} as field: java_field) =>
-         pctf_method((
-           Located.mk(name),
-           Public,
-           Concrete,
-           Java_Field.emit_type(`Field, field),
-         ))
+         pctf_method((Located.mk(name), Public, Concrete, field.signature))
        );
   let method_fields =
     t.methods

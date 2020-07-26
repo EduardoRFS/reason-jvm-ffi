@@ -43,14 +43,19 @@ let emit = (jni_class_name, env, t: t) => {
   };
   pexp_let_alias(field_id, declare_field_id, declare_function);
 };
-let emit_type = (kind, t: java_field) => {
-  let content_type = Java_Type_Emit.emit_type(t.type_);
+let emit_type = (kind, java_type, static) => {
+  let content_type = Java_Type_Emit.emit_type(java_type);
   let rtype = ptyp_constr(Located.mk(lident("ref")), [content_type]);
 
   switch (kind) {
   | `Field => rtype
   | `Unsafe =>
-    let make_type = t.static ? [%type: unit => Jni.clazz] : [%type: Jni.obj];
+    let make_type = static ? [%type: unit => Jni.clazz] : [%type: Jni.obj];
     ptyp_arrow(Nolabel, make_type, rtype);
   };
+};
+
+let make = (~java_signature, ~name, ~static, ~java_type: java_type) => {
+  let signature = emit_type(`Field, java_type, static);
+  {signature, java_signature, name, static, type_: java_type};
 };

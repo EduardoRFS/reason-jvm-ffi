@@ -133,7 +133,7 @@ let class_field_to_java_field = class_field => {
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
-  {java_signature, name, static, type_: java_type};
+  Java_Field.make(~java_signature, ~name, ~static, ~java_type);
 };
 
 let jclass_to_java_class = jclass => {
