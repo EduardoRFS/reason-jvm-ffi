@@ -4,7 +4,6 @@ open Basic_types;
 open Structures;
 
 type parameter = Basic_types.parameter;
-type t = java_method;
 
 // TODO: this seems hackish as hell
 type internal_t = {
