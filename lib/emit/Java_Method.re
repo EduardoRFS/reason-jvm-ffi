@@ -3,7 +3,7 @@ open Emit_Helper;
 open Basic_types;
 open Structures;
 
-let is_static = t => t.kind == `Function;
+let is_static = kind => kind == `Function;
 
 let find_required_classes = t =>
   List.concat_map(
@@ -11,6 +11,43 @@ let find_required_classes = t =>
     t.parameters,
   )
   @ Java_Type.find_required_class(t.return_type);
+
+type parameter = {
+  label: arg_label,
+  pat: pattern,
+  expr: expression,
+  typ: core_type,
+};
+
+let parse_parameters = (kind, parameters) => {
+  let parameters =
+    switch (parameters) {
+    | [] => [{label: Nolabel, pat: punit, expr: eunit, typ: typ_unit}]
+    | parameters =>
+      parameters
+      |> List.map(((name, java_type, _)) =>
+           {
+             label: Labelled(name),
+             pat: pvar(name),
+             expr: evar(name),
+             // TODO: look at open object types later
+             typ: Java_Type_Emit.emit_type(java_type),
+           }
+         )
+    };
+  let additional =
+    is_static(kind)
+      ? []
+      : [
+        {
+          label: Nolabel,
+          pat: pvar("this"),
+          expr: evar("this"),
+          typ: [%type: Jni.obj],
+        },
+      ];
+  (additional, parameters);
+};
 
 let emit_argument = ((name, java_type, _)) => {
   let identifier = evar(name);
@@ -49,7 +86,7 @@ let emit_method_call =
   let call_method =
     eapply(
       emit_jni_method_name(t),
-      [is_static(t) ? clazz_id : evar(object_id), method_id, args],
+      [is_static(t.kind) ? clazz_id : evar(object_id), method_id, args],
     );
   let returned_value =
     switch (t.kind) {
@@ -84,7 +121,8 @@ let method_id = "jni_methodID";
 
 let emit_jni_get_methodID = (jni_class_name, t: java_method) =>
   eapply(
-    is_static(t) ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
+    is_static(t.kind)
+      ? [%expr Jni.get_static_methodID] : [%expr Jni.get_methodID],
     [
       eapply(evar(jni_class_name), [eunit]),
       estring(t.java_name),
@@ -150,7 +188,7 @@ let emit_type = (kind, t) => {
       | parameters => parameters
       };
     let additional_parameter =
-      switch (kind, t.kind, is_static(t)) {
+      switch (kind, t.kind, is_static(t.kind)) {
       | (_, `Constructor, _)
       | (`Method, _, _) => []
       | (`Unsafe, _, true) => [(Nolabel, [%type: unit => Jni.clazz])]
