@@ -32,6 +32,7 @@ type parameter = {
   pat: Parsetree.pattern,
   expr: Parsetree.expression,
   typ: Parsetree.core_type,
+  jni_argument: option(Parsetree.expression),
   java_type // TODO: remove this in the future
 };
 

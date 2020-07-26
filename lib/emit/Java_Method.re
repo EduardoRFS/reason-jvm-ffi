@@ -15,53 +15,7 @@ let find_required_classes = t =>
   )
   @ Java_Type.find_required_class(t.return_type);
 
-let parse_parameters = (kind, parameters) => {
-  let parameters =
-    switch (parameters) {
-    | [] => [
-        {
-          label: Nolabel,
-          pat: punit,
-          expr: eunit,
-          typ: typ_unit,
-          java_type: Void,
-        },
-      ]
-    | parameters =>
-      parameters
-      |> List.map(((name, java_type)) =>
-           {
-             label: Labelled(name),
-             pat: pvar(name),
-             expr: evar(name),
-             // TODO: look at open object types later
-             typ: Java_Type_Emit.emit_type(java_type),
-             java_type,
-           }
-         )
-    };
-  let additional =
-    is_static(kind)
-      ? None
-      : Some({
-          label: Nolabel,
-          pat: pvar("this"),
-          expr: evar("this"),
-          typ: [%type: Jni.obj],
-          java_type: Void,
-        });
-  (additional, parameters);
-};
-
-let make =
-    (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
-  let (this, parameters) = parse_parameters(kind, parameters);
-  {java_name, java_signature, name, kind, this, parameters, return_type};
-};
-
-let emit_argument = parameter => {
-  let identifier = parameter.expr;
-  let java_type = parameter.java_type;
+let emit_argument = (identifier, java_type) => {
   let read_expr =
     switch (java_type) {
     | Object(_) => get_unsafe_jobj(identifier)
@@ -85,6 +39,53 @@ let emit_argument = parameter => {
   };
 };
 
+let parse_parameters = (kind, parameters) => {
+  let parameters =
+    switch (parameters) {
+    | [] => [
+        {
+          label: Nolabel,
+          pat: punit,
+          expr: eunit,
+          typ: typ_unit,
+          jni_argument: None,
+          java_type: Void,
+        },
+      ]
+    | parameters =>
+      parameters
+      |> List.map(((name, java_type)) =>
+           {
+             label: Labelled(name),
+             pat: pvar(name),
+             expr: evar(name),
+             // TODO: look at open object types later
+             typ: Java_Type_Emit.emit_type(java_type),
+             jni_argument: Some(emit_argument(evar(name), java_type)),
+             java_type,
+           }
+         )
+    };
+  let additional =
+    is_static(kind)
+      ? None
+      : Some({
+          label: Nolabel,
+          pat: pvar("this"),
+          expr: evar("this"),
+          typ: [%type: Jni.obj],
+          jni_argument: None,
+          java_type: Void,
+        });
+  (additional, parameters);
+};
+
+let make =
+    (~java_name, ~java_signature, ~name, ~kind, ~parameters, ~return_type) => {
+  let (this, parameters) = parse_parameters(kind, parameters);
+  {java_name, java_signature, name, kind, this, parameters, return_type};
+};
+
 let emit_jni_method_name = t =>
   Java_Type_Emit.emit_camljava_jni_to_call(
     `Method,
@@ -92,7 +93,8 @@ let emit_jni_method_name = t =>
     t.kind == `Constructor ? Void : t.return_type,
   );
 let emit_method_call = (env, clazz_id, object_id, method_id, args, t: t) => {
-  let args = args |> List.map(emit_argument) |> pexp_array;
+  let args =
+    args |> List.filter_map(param => param.jni_argument) |> pexp_array;
   let call_method =
     eapply(
       emit_jni_method_name(t),
