@@ -41,10 +41,8 @@ type java_type =
 type java_field = {
   signature: Parsetree.core_type,
   make_field: EnvMap.t(EnvMap.value) => Parsetree.expression,
-  java_signature: string,
   name: string,
   static: bool,
-  type_: java_type,
 };
 
 type parameter = {

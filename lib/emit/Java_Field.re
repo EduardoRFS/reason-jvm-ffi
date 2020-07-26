@@ -48,5 +48,5 @@ let emit_type = (kind, java_type, static) => {
 let make = (~java_signature, ~name, ~static, ~java_type: java_type) => {
   let signature = emit_type(`Field, java_type, static);
   let make_field = emit(name, java_signature, static, java_type);
-  {signature, make_field, java_signature, name, static, type_: java_type};
+  {signature, make_field, name, static};
 };
