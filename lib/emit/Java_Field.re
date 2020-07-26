@@ -1,14 +1,8 @@
 open Emit_Helper;
 open Basic_types;
 
-type t = java_field;
-
 let emit_jni_field_access = (kind, static, type_) =>
   Java_Type_Emit.emit_camljava_jni_to_call(kind, static, type_);
-
-let object_id = "this";
-// TODO: escape these names + jni_class_name
-let field_id = "jni_fieldID";
 
 let this = {
   label: Nolabel,
