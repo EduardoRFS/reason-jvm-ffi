@@ -40,6 +40,7 @@ type java_type =
 // TODO: access, final and static
 type java_field = {
   signature: Parsetree.core_type,
+  make_field: EnvMap.t(EnvMap.value) => Parsetree.expression,
   java_signature: string,
   name: string,
   static: bool,

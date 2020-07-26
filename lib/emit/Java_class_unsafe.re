@@ -17,12 +17,11 @@ let emit_method_type = (kind, method: java_method) => {
 };
 let emit_methods_type = (kind, methods) =>
   methods |> List.map(emit_method_type(kind));
-let emit_field = Java_Field.emit(jni_class_name);
 let emit_fields = (env, t) =>
   t.fields
   |> List.map((field: java_field) => {
        let name = unsafe_name(field.name);
-       pstr_value_alias(name, emit_field(env, field));
+       pstr_value_alias(name, field.make_field(env));
      });
 
 let emit_method = (env, method) =>

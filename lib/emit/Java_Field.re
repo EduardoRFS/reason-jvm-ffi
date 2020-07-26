@@ -1,47 +1,37 @@
 open Emit_Helper;
 open Basic_types;
-open Structures;
 
 type t = java_field;
 
-let emit_jni_field_access = (kind, t: java_field) =>
-  Java_Type_Emit.emit_camljava_jni_to_call(kind, t.static, t.type_);
-let emit_make_reference = (env, clazz_id, object_id, field_id, t) => {
-  let create_getter_or_setter = kind => {
-    let returned_value =
-      eapply(
-        emit_jni_field_access(kind, t),
-        [t.static ? evar(clazz_id) : evar(object_id), evar(field_id)],
-      );
-    unsafe_cast_returned_value(env, t.type_, returned_value);
-  };
-  let getter = create_getter_or_setter(`Getter);
-  let getter = pexp_fun(Nolabel, None, punit, getter);
-  let setter = create_getter_or_setter(`Setter);
-  eapply([%expr Ref.make], [getter, setter]);
-};
+let emit_jni_field_access = (kind, static, type_) =>
+  Java_Type_Emit.emit_camljava_jni_to_call(kind, static, type_);
 
 let object_id = "this";
 // TODO: escape these names + jni_class_name
 let field_id = "jni_fieldID";
 
-let emit = (jni_class_name, env, t: t) => {
-  let declare_field_id =
-    eapply(
-      [%expr Jni.get_fieldID],
+let this = {
+  label: Nolabel,
+  pat: pvar("this"),
+  expr: evar("this"),
+  typ: [%type: Jni.obj],
+  jni_argument: None,
+};
+
+let emit = (name, java_signature, static, type_, _env) => {
+  let call =
+    pexp_apply(
+      [%expr id],
       [
-        eapply(evar(jni_class_name), [eunit]),
-        estring(t.name),
-        estring(t.java_signature),
+        (Labelled("name"), estring(name)),
+        (Labelled("signature"), estring(java_signature)),
+        (Labelled("getter"), emit_jni_field_access(`Getter, static, type_)),
+        (Labelled("setter"), emit_jni_field_access(`Setter, static, type_)),
+        (Nolabel, this.expr),
       ],
     );
-  let declare_function = {
-    let make_reference =
-      emit_make_reference(env, jni_class_name, object_id, field_id, t);
-    let parameter = t.static ? pvar(jni_class_name) : pvar(object_id);
-    pexp_fun_helper([(Nolabel, parameter)], make_reference);
-  };
-  pexp_let_alias(field_id, declare_field_id, declare_function);
+  // TODO: cast objects, getter and setter individually;
+  pexp_fun_helper([(this.label, this.pat)], call);
 };
 let emit_type = (kind, java_type, static) => {
   let content_type = Java_Type_Emit.emit_type(java_type);
@@ -57,5 +47,6 @@ let emit_type = (kind, java_type, static) => {
 
 let make = (~java_signature, ~name, ~static, ~java_type: java_type) => {
   let signature = emit_type(`Field, java_type, static);
-  {signature, java_signature, name, static, type_: java_type};
+  let make_field = emit(name, java_signature, static, java_type);
+  {signature, make_field, java_signature, name, static, type_: java_type};
 };
