@@ -62,7 +62,6 @@ let parse_parameters = (kind, parameters) => {
           expr: eunit,
           typ: typ_unit,
           jni_argument: None,
-          java_type: Void,
         },
       ]
     | parameters =>
@@ -75,7 +74,6 @@ let parse_parameters = (kind, parameters) => {
              // TODO: look at open object types later
              typ: Java_Type_Emit.emit_type(java_type),
              jni_argument: Some(emit_argument(evar(name), java_type)),
-             java_type,
            }
          )
     };
@@ -88,7 +86,6 @@ let parse_parameters = (kind, parameters) => {
           expr: evar("this"),
           typ: [%type: Jni.obj],
           jni_argument: None,
-          java_type: Void,
         });
   (additional, parameters);
 };
