@@ -14,7 +14,7 @@ let emit_make_field = (name, java_signature, static, type_, _env) => {
     Java_Type_Emit.emit_camljava_jni_to_call(kind, static, type_);
   let call =
     pexp_apply(
-      [%expr id],
+      [%expr JavaFFI.make_field],
       [
         (Labelled("name"), estring(name)),
         (Labelled("signature"), estring(java_signature)),
