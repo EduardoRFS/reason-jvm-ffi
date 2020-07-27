@@ -26,7 +26,7 @@ let jni_class_name = "unsafe_jni_class";
 let object_id = "jni_jobj";
 
 let emit_curried_method = (clazz, env, method) => {
-  let static = Java_Method.is_static(method.kind);
+  let static = Method.is_static(method.kind);
   let find_lid = static ? Env.function_lid : Env.method_lid;
   let lid = find_lid(clazz, method.name, env) |> loc |> pexp_ident;
   let arg = static ? evar(jni_class_name) : evar(object_id);

@@ -97,7 +97,7 @@ let jmethod_to_java_method = (class_name, jmethod) =>
         |> Option.map(value_type_to_java_type)
         |> Option.value(~default=Void)
       };
-    Java_Method.make(
+    Method.make(
       ~java_name,
       ~java_signature,
       ~name,
@@ -133,7 +133,7 @@ let class_field_to_java_field = class_field => {
   let name = fs_name(signature);
   let static = class_field.cf_static;
   let java_type = fs_type(signature) |> value_type_to_java_type;
-  Java_Field.make(~java_signature, ~name, ~static, ~java_type);
+  Field.make(~java_signature, ~name, ~static, ~java_type);
 };
 
 let jclass_to_java_class = jclass => {
