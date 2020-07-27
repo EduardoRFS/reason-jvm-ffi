@@ -11,7 +11,7 @@ let this = {
 
 let emit_make_field = (name, java_signature, static, type_, _env) => {
   let emit_jni_field_access = (kind, static, type_) =>
-    Java_Type_Emit.emit_camljava_jni_to_call(kind, static, type_);
+    Java_Type.emit_camljava_jni_to_call(kind, static, type_);
   let call =
     pexp_apply(
       [%expr JavaFFI.make_field],
@@ -27,7 +27,7 @@ let emit_make_field = (name, java_signature, static, type_, _env) => {
   pexp_fun_helper([(this.label, this.pat)], call);
 };
 let emit_type = java_type => {
-  let content_type = Java_Type_Emit.emit_type(java_type);
+  let content_type = Java_Type.emit_type(java_type);
   ptyp_constr(loc(lident("ref")), [content_type]);
 };
 

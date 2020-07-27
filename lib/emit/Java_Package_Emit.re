@@ -30,7 +30,7 @@ let emit_type = (env, t) =>
 let emit_alias_type = t =>
   emit_package_type(
     class_id => {
-      let typ_t = Java_Type_Emit.Object_Type_Emit.emit_type(class_id);
+      let typ_t = Java_Type.Object_Type.emit_type(class_id);
       [%sigi: type t = [%t typ_t]];
     },
     t,

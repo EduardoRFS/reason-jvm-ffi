@@ -72,7 +72,7 @@ let parse_parameters = (kind, parameters) => {
              pat: pvar(name),
              expr: evar(name),
              // TODO: look at open object types later
-             typ: Java_Type_Emit.emit_type(java_type),
+             typ: Java_Type.emit_type(java_type),
              jni_argument: Some(emit_argument(evar(name), java_type)),
            }
          )
@@ -93,12 +93,12 @@ let parse_parameters = (kind, parameters) => {
 let emit_type = (parameters, return_type) => {
   let parameters =
     parameters |> List.map(({label, typ, _}) => (label, typ));
-  let return_type = Java_Type_Emit.emit_type(return_type);
+  let return_type = Java_Type.emit_type(return_type);
   ptyp_arrow_helper(parameters, return_type);
 };
 
 let emit_jni_method_name = (t: internal_t) =>
-  Java_Type_Emit.emit_camljava_jni_to_call(
+  Java_Type.emit_camljava_jni_to_call(
     `Method,
     t.kind == `Function,
     t.kind == `Constructor ? Void : t.return_type,
