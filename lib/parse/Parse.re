@@ -5,6 +5,8 @@ open Javalib_pack;
 open JBasics;
 open Javalib;
 
+// TODO: keep same order as Java for methods and fields
+
 let (let.some) = Option.bind;
 
 let class_path = name => {
@@ -124,7 +126,7 @@ let escape_duplicated_names = (compare, transform, list) => {
       ([], []),
       list,
     );
-  list;
+  list |> List.rev;
 };
 
 let class_field_to_java_field = class_field => {
