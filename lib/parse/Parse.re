@@ -107,20 +107,25 @@ let jmethod_to_java_method = (class_name, jmethod) =>
     );
   };
 // TODO: methods and functions should be separated
-let escape_duplicated_names = (compare, transform, list) =>
-  List.fold_left(
-    (new_list, item) => {
-      let has_duplicated = {
-        let occurrences = list |> List.filter(compare(item)) |> List.length;
-        occurrences >= 2;
-      };
-      let counter = new_list |> List.filter(compare(item)) |> List.length;
-      let item = has_duplicated ? transform(counter, item) : item;
-      [item, ...new_list];
-    },
-    [],
-    list,
-  );
+let escape_duplicated_names = (compare, transform, list) => {
+  let (_old_list, list) =
+    List.fold_left(
+      ((old_list, new_list), item) => {
+        let has_duplicated = {
+          let occurrences =
+            list |> List.filter(compare(item)) |> List.length;
+          occurrences >= 2;
+        };
+        let old_list = [item, ...old_list];
+        let counter = old_list |> List.filter(compare(item)) |> List.length;
+        let item = has_duplicated ? transform(counter, item) : item;
+        (old_list, [item, ...new_list]);
+      },
+      ([], []),
+      list,
+    );
+  list;
+};
 
 let class_field_to_java_field = class_field => {
   let signature = class_field.cf_signature;
