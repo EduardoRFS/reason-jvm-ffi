@@ -116,7 +116,7 @@ let emit_functor = (required_class, t) => {
     [@ocaml.warning "-33"]
     open Params;
     %s
-    [open_package, unsafe_module(Java_class_unsafe.emit(env, t))];
+    [open_package, unsafe_module(Make_functor.emit(env, t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
@@ -149,7 +149,7 @@ let emit_functor = (required_class, t) => {
 let emit_file = (required_class, t) => [%str
   open JavaFFI;
   %s
-  [Java_class_unsafe.emit_class_functor(t), emit_functor(required_class, t)]
+  [Class_functor.emit(t), emit_functor(required_class, t)]
 ];
 
 // TODO: this is mostly duplicated code grr
@@ -172,7 +172,7 @@ let emit_module_type = t => {
   let signature =
     List.concat([
       [
-        Java_class_unsafe.emit_type(t),
+        Class_type.emit(t),
         type_declaration,
         [%sigi: type sub('a) = {.. ...t} as 'a],
       ],
