@@ -116,7 +116,7 @@ let emit_functor = (required_class, t) => {
     [@ocaml.warning "-33"]
     open Params;
     %s
-    [open_package, unsafe_module(Make.emit(env, t))];
+    [open_package, unsafe_module(Unsafe.emit(env, t))];
     [@ocaml.warning "-33"]
     open Unsafe.Please.Stop;
     %s
