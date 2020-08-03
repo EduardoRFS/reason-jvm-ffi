@@ -64,15 +64,18 @@ let emit_class_type = t => {
     ~expr=class_fun,
   );
 };
-
-let emit_unsafe = t => {
+let emit_unsafe_module_class = t => {
   let declare_jni_class =
     value_description(
       ~name=Located.mk(jni_class_name),
-      ~type_=[%type: unit => Jni.clazz],
+      ~type_=[%type: Jni.clazz],
       ~prim=[],
     )
     |> psig_value;
+  [declare_jni_class, psig_class([emit_class_type(t)])] |> pmty_signature;
+};
+
+let emit_unsafe = t => {
   let declare_fields = [%sigi: module Fields: {[%%s emit_fields(t.fields)];}];
   let declare_constructors = [%sigi:
     module Constructors: {[%%s emit_methods(`Unsafe, t.constructors)];}
@@ -83,11 +86,9 @@ let emit_unsafe = t => {
   let declare_functions = [%sigi:
     module Functions: {[%%s emit_methods(`Unsafe, t.functions)];}
   ];
-  let delcare_class = [%sigi:
-    module Class: {[%%s [psig_class([emit_class_type(t)])]];}
-  ];
+  let delcare_class =
+    psig_module_alias("Class", emit_unsafe_module_class(t));
   let content = [
-    declare_jni_class,
     declare_fields,
     declare_constructors,
     declare_methods,

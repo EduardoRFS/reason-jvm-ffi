@@ -86,12 +86,9 @@ let pstr_open_alias = (~warning=false, ~override=Fresh, lid) => {
   pstr_open(info);
 };
 
-let psig_module_alias_module = (name, alias) => {
-  module_declaration(
-    ~name=loc(Some(name)),
-    ~type_=pmty_typeof(pmod_ident(loc(alias))),
-  )
-  |> psig_module;
-};
+let psig_module_alias = (name, signature) =>
+  module_declaration(~name=loc(Some(name)), ~type_=signature) |> psig_module;
+let psig_module_alias_module = (name, alias) =>
+  psig_module_alias(name, pmty_typeof(pmod_ident(loc(alias))));
 let pstr_module_alias = (name, module_expr) =>
   module_binding(~name=loc(Some(name)), ~expr=module_expr) |> pstr_module;

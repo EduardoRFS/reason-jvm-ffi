@@ -22,7 +22,7 @@ let find_required_classes = t => {
   extends @ methods;
 };
 
-let jni_class_name = "unsafe_jni_class";
+let jni_class_name = "unsafe_jni_clazz";
 let object_id = "jni_jobj";
 
 let emit_curried_method = (clazz, env, method) => {
