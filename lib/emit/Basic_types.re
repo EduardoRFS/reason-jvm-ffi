@@ -227,16 +227,11 @@ module Structures = {
   open Env;
   open Emit_Helper;
 
-  let unsafe_module = content => [%stri
-    module Unsafe = {
-      module Please = {
-        module Stop = {
-          %s
-          content;
-        };
-      };
-    }
-  ];
+  let unsafe_module = content => {
+    let stop = pstr_module_alias("Stop", content);
+    let please = pstr_module_alias("Please", pmod_structure([stop]));
+    pstr_module_alias("Unsafe", pmod_structure([please]));
+  };
   let unsafe_module_type = content => [%sigi:
     module Unsafe: {module Please: {module Stop: {[%%s content];};};}
   ];

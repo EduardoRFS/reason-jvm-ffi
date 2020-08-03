@@ -2,7 +2,6 @@ open Emit_Helper;
 open Basic_types;
 open Java_Type;
 open Java_class;
-open Structures;
 open Lid;
 
 let emit_fields = (env, t) =>
@@ -57,11 +56,6 @@ let emit = (env, t) => {
       [include_class_declaration];
     }
   ];
-  // TODO: this is a hackish solution, shouldn't be needed
-  let declare_self_alias = {
-    let alias = pmod_structure([unsafe_module([declare_class])]);
-    module_binding(~name=loc(Some(t.name.name)), ~expr=alias) |> pstr_module;
-  };
 
   let find_class = {
     let name = Object_Type.to_jvm_name(t.java_name) |> estring;
@@ -71,13 +65,12 @@ let emit = (env, t) => {
     );
   };
 
-  [
-    declare_self_alias,
+  pmod_structure([
     find_class,
     declare_fields,
     declare_constructors,
     declare_methods,
     declare_functions,
     declare_class,
-  ];
+  ]);
 };
