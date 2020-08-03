@@ -93,3 +93,5 @@ let psig_module_alias_module = (name, alias) => {
   )
   |> psig_module;
 };
+let pstr_module_alias = (name, module_expr) =>
+  module_binding(~name=loc(Some(name)), ~expr=module_expr) |> pstr_module;
