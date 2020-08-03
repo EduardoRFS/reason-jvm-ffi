@@ -82,7 +82,7 @@ let emit_functor_parameters_type = (required_classes, self: java_class) => {
   ];
   pmty_signature([open_javatype, ...modules]);
 };
-let emit_functor = (required_class, t) => {
+let emit = (required_class, t) => {
   let env = emit_functor_env(required_class, t);
   // open Unsafe.Please.Stop
   let env = env |> Env.open_lid(unsafe_module_lid);
@@ -146,8 +146,3 @@ let emit_functor = (required_class, t) => {
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
-let emit_file = (required_class, t) => [%str
-  open JavaFFI;
-  %s
-  [Class.emit(t), emit_functor(required_class, t)]
-];

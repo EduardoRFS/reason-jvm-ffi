@@ -41,6 +41,12 @@ let emit_file_type = (env, t) => {
   [%sig: open JavaFFI; [%%s [psig_recmodule(modules)]]];
 };
 
+let emit_file = (required_class, t) => [%str
+  open JavaFFI;
+  %s
+  [Class.emit(t), Make.emit(required_class, t)]
+];
+
 let emit_file_classes = (env, t) => {
   let rec all_classes = (acc, t) => {
     let classes =
@@ -64,7 +70,7 @@ let emit_file_classes = (env, t) => {
                     }
                   }
                 );
-           (id, Make.emit_file(required_class, java_class));
+           (id, emit_file(required_class, java_class));
          });
     let new_acc = List.append(classes, acc);
     switch (packages(t)) {
