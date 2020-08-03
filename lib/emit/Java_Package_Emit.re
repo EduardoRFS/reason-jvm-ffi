@@ -21,8 +21,7 @@ let rec emit_package_type = (class_fn, t) => {
 };
 let emit_type = (env, t) =>
   emit_package_type(
-    class_id =>
-      Java_Env.find(class_id, env) |> Make.emit_module_type |> psig_module,
+    class_id => Java_Env.find(class_id, env) |> Type.emit,
     t,
   );
 let emit_alias_type = t =>

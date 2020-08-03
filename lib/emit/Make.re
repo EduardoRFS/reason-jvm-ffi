@@ -151,36 +151,3 @@ let emit_file = (required_class, t) => [%str
   %s
   [Class.emit(t), emit_functor(required_class, t)]
 ];
-
-// TODO: this is mostly duplicated code grr
-let emit_method_type = (kind, method: java_method) => {
-  let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
-  value_description(
-    ~name=Located.mk(name),
-    ~type_=method.signature,
-    ~prim=[],
-  )
-  |> psig_value;
-};
-let emit_methods_type = (kind, methods) =>
-  methods |> List.map(emit_method_type(kind));
-
-let emit_module_type = t => {
-  let constructors = emit_methods_type(`Method, t.constructors);
-  let functions = emit_methods_type(`Method, t.functions);
-  let type_declaration = psig_type_alias("t", unsafe_class_lid(t.name));
-  let signature =
-    List.concat([
-      [
-        Type.emit(t),
-        type_declaration,
-        [%sigi: type sub('a) = {.. ...t} as 'a],
-      ],
-      constructors,
-      functions,
-    ]);
-  module_declaration(
-    ~name=Located.mk(Some(t.name.name)),
-    ~type_=pmty_signature(signature),
-  );
-};
