@@ -13,8 +13,9 @@ module EnvMap = {
   let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
 
   type value = {
-    env_unsafe_class: Longident.t,
-    env_jni_class: Longident.t,
+    env_clazz: Longident.t,
+    env_t: Longident.t,
+    env_unsafe_t: Longident.t,
     env_fields: StringMap.t(Longident.t),
     env_constructors: StringMap.t(Longident.t),
     env_methods: StringMap.t(Longident.t),
@@ -147,11 +148,14 @@ module Env = {
     update_methods((env_functions, t) => {...t, env_functions});
 
   let add_empty_class = (class_name, lid) => {
-    let unsafe_class = concat_lid([lid, unsafe_lid("t")]);
-    let unsafe_jni_clazz = concat_lid([lid, unsafe_lid("jni_clazz")]);
+    let env_clazz = concat_lid([lid, unsafe_lid("clazz")]);
+    let env_t = concat_lid([lid, Lident("t")]);
+    let env_unsafe_t = concat_lid([lid, unsafe_lid("t")]);
+
     let value = {
-      env_unsafe_class: unsafe_class,
-      env_jni_class: unsafe_jni_clazz,
+      env_clazz,
+      env_t,
+      env_unsafe_t,
       env_fields: StringMap.empty,
       env_constructors: StringMap.empty,
       env_methods: StringMap.empty,
@@ -195,8 +199,9 @@ module Env = {
     let sub_lid = a => sub_lid(a, to_open);
     let sub_lid_map = str_map => str_map |> StringMap.map(sub_lid);
     {
-      env_unsafe_class: sub_lid(value.env_unsafe_class),
-      env_jni_class: sub_lid(value.env_jni_class),
+      env_clazz: sub_lid(value.env_clazz),
+      env_t: sub_lid(value.env_t),
+      env_unsafe_t: sub_lid(value.env_unsafe_t),
       env_fields: sub_lid_map(value.env_fields),
       env_constructors: sub_lid_map(value.env_constructors),
       env_methods: sub_lid_map(value.env_methods),
@@ -205,14 +210,9 @@ module Env = {
   };
   let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
 
-  let unsafe_class_lid = (class_name, t) => {
-    let value = t |> find(class_name);
-    value.env_unsafe_class;
-  };
-  let jni_class_lid = (class_name, t) => {
-    let value = t |> find(class_name);
-    value.env_jni_class;
-  };
+  let clazz_lid = (class_name, t) => (t |> find(class_name)).env_clazz;
+  let t_lid = (class_name, t) => (t |> find(class_name)).env_t;
+  let unsafe_t_lid = (class_name, t) => (t |> find(class_name)).env_unsafe_t;
   let find_lid = (f, class_name, name, t) => {
     let value = t |> find(class_name);
     f(value) |> StringMap.find(name);
@@ -244,7 +244,7 @@ module Structures = {
   let get_unsafe_jobj = id => pexp_send(id, loc("get_jni_jobj"));
 
   let unsafe_class_cast = (env, class_name, jobj) => {
-    let lid = unsafe_class_lid(class_name, env) |> loc;
+    let lid = unsafe_t_lid(class_name, env) |> loc;
     eapply(pexp_new(lid), [jobj]);
   };
 
