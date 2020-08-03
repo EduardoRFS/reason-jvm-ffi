@@ -22,9 +22,7 @@ let rec emit_package_type = (class_fn, t) => {
 let emit_type = (env, t) =>
   emit_package_type(
     class_id =>
-      Java_Env.find(class_id, env)
-      |> Java_class_safe.emit_module_type
-      |> psig_module,
+      Java_Env.find(class_id, env) |> Make.emit_module_type |> psig_module,
     t,
   );
 let emit_alias_type = t =>
@@ -67,7 +65,7 @@ let emit_file_classes = (env, t) => {
                     }
                   }
                 );
-           (id, Java_class_safe.emit_file(required_class, java_class));
+           (id, Make.emit_file(required_class, java_class));
          });
     let new_acc = List.append(classes, acc);
     switch (packages(t)) {
