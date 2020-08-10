@@ -4,13 +4,14 @@ open Java_class;
 open Structures;
 open Lid;
 
+let add_jni_obj = type_ => ptyp_arrow(Nolabel, [%type: Jni.obj], type_);
+
 // TODO: duplicated
 let emit_method = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
   let signature =
     switch (kind, method.kind) {
-    | (`Unsafe, `Method) =>
-      ptyp_arrow(Nolabel, [%type: Jni.obj], method.signature)
+    | (`Unsafe, `Method) => add_jni_obj(method.signature)
     | _ => method.signature
     };
   value_description(~name=Located.mk(name), ~type_=signature, ~prim=[])
@@ -24,9 +25,10 @@ let emit_fields = fields =>
   |> List.map((field: java_field) => {
        // TODO: duplicated code
        let name = field.static ? field.name : unsafe_name(field.name);
+
        value_description(
          ~name=Located.mk(name),
-         ~type_=field.signature,
+         ~type_=add_jni_obj(field.signature),
          ~prim=[],
        )
        |> psig_value;
