@@ -125,18 +125,10 @@ let emit = (required_class, t) => {
     safe_values
   ];
   let content = {
-    let mod_constraint = {
-      let lid = Java_Type.Object_Type.emit_module_lid(t.java_name);
-      let lid = concat_lid([Lident("Javatype"), lid]);
-      let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
-      pmod_constraint(pmod_structure(content), mod_type);
-    };
-    let wrapper =
-      module_binding(
-        ~name=Located.mk(Some(t.name.name)),
-        ~expr=mod_constraint,
-      );
-    pstr_recmodule([wrapper]);
+    let lid = Java_Type.Object_Type.emit_module_lid(t.java_name);
+    let lid = concat_lid([Lident("Javatype"), lid]);
+    let mod_type = pmty_typeof(pmod_ident(Located.mk(lid)));
+    pmod_constraint(pmod_structure(content), mod_type);
   };
   let parameter =
     Named(
@@ -144,7 +136,7 @@ let emit = (required_class, t) => {
       emit_functor_parameters_type(required_class, t),
     );
   // useful to ensure the generated code complies with the type definition
-  let mod_functor = pmod_functor(parameter, pmod_structure([content]));
+  let mod_functor = pmod_functor(parameter, content);
   module_binding(~name=Located.mk(Some("Make")), ~expr=mod_functor)
   |> pstr_module;
 };
