@@ -93,17 +93,22 @@ let emit_class_functor_parameters_type = t => {
   List.append(Option.value(~default=[], parent), [fields, methods])
   |> pmty_signature;
 };
+let emit_find_class = t => {
+  let name = Java_Type.Object_Type.to_jvm_name(t.java_name) |> estring;
+  pstr_value_alias(jni_class_name, eapply([%expr Jni.find_class], [name]));
+};
 let emit = t => {
   let env = emit_class_functor_env(t);
   let env = env |> Env.open_lid(Lident("Params"));
 
-  let content = emit_class(env, t);
+  let unsafe_jni_clazz = emit_find_class(t);
+  let unsafe_t = emit_class(env, t);
   let parameters =
     Named(
       Located.mk(Some("Params")),
       emit_class_functor_parameters_type(t),
     );
-  let content = [[%stri open Params], content];
+  let content = [[%stri open Params], unsafe_jni_clazz, unsafe_t];
   // useful to ensure the generated code complies with the type definition
   let mod_functor = pmod_functor(parameters, pmod_structure(content));
   module_binding(~name=Located.mk(Some("Class")), ~expr=mod_functor)

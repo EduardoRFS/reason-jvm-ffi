@@ -1,7 +1,5 @@
 open Emit_Helper;
 open Basic_types;
-open Java_Type;
-open Java_class;
 open Lid;
 
 let emit_fields = (env, t) =>
@@ -60,16 +58,7 @@ let emit = (env, t) => {
     }
   ];
 
-  let find_class = {
-    let name = Object_Type.to_jvm_name(t.java_name) |> estring;
-    pstr_value_alias(
-      jni_class_name,
-      [%expr () => Jni.find_class([%e name])],
-    );
-  };
-
   pmod_structure([
-    find_class,
     declare_fields,
     declare_constructors,
     declare_methods,
