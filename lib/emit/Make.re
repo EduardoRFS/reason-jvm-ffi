@@ -113,6 +113,7 @@ let emit = (required_class, t) => {
     ]);
 
   let open_package = pstr_open_alias(package_lid(t.java_name.package));
+  let env = Env.open_lid(package_lid(t.java_name.package), env);
   let content = [%str
     [@ocaml.warning "-33"]
     open Params;
