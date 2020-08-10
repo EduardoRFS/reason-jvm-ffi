@@ -148,7 +148,7 @@ module Env = {
     update_methods((env_functions, t) => {...t, env_functions});
 
   let add_empty_class = (class_name, lid) => {
-    let env_clazz = concat_lid([lid, unsafe_lid("clazz")]);
+    let env_clazz = concat_lid([lid, unsafe_lid("jni_clazz")]);
     let env_t = concat_lid([lid, Lident("t")]);
     let env_unsafe_t = concat_lid([lid, unsafe_lid("t")]);
 
@@ -169,7 +169,7 @@ module Env = {
     let class_lid =
       switch (class_lid) {
       | Some(class_lid) => class_lid
-      | None => lid("Classs")
+      | None => lid("Class")
       };
     t
     |> add_empty_class(name, class_lid)
