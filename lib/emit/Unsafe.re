@@ -11,13 +11,16 @@ let emit_fields = (env, t) =>
        pstr_value_alias(name, field.make_field(env));
      });
 
-let emit_method = (env, method) =>
-  method.call_jni(~clazz=evar(jni_class_name), env);
-let emit_methods = (env, methods) =>
+let emit_method = (env, self, method) =>
+  method.call_jni(
+    ~clazz=Env.clazz_lid(self, env) |> Located.mk |> pexp_ident,
+    env,
+  );
+let emit_methods = (env, self, methods) =>
   methods
   |> List.map((method: java_method) => {
        let name = unsafe_name(method.name);
-       pstr_value_alias(name, emit_method(env, method));
+       pstr_value_alias(name, emit_method(env, self, method));
      });
 
 let emit = (env, t) => {
@@ -30,19 +33,19 @@ let emit = (env, t) => {
   let declare_constructors = [%stri
     module Constructors = {
       %s
-      emit_methods(env, t.constructors);
+      emit_methods(env, t.name, t.constructors);
     }
   ];
   let declare_methods = [%stri
     module Methods = {
       %s
-      emit_methods(env, t.methods);
+      emit_methods(env, t.name, t.methods);
     }
   ];
   let declare_functions = [%stri
     module Functions = {
       %s
-      emit_methods(env, t.functions);
+      emit_methods(env, t.name, t.functions);
     }
   ];
   let include_class_declaration =
