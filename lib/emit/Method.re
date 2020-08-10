@@ -78,7 +78,7 @@ let parse_parameters = (kind, parameters) => {
          )
     };
   let additional =
-    is_static(kind)
+    is_static(kind) || kind == `Constructor
       ? None
       : Some({
           label: Nolabel,
@@ -125,7 +125,7 @@ let emit_method_call = (env, clazz_id, args, t: internal_t) => {
       | `Function => id([%expr JavaFFI.call_function])
       },
       switch (t.kind) {
-      | `Constructor => [signature, method_to_call, args]
+      | `Constructor => [signature, this, args]
       | _ => [name, signature, method_to_call, this, args]
       },
     );
