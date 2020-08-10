@@ -7,11 +7,13 @@ open Lid;
 // TODO: duplicated
 let emit_method = (kind, method: java_method) => {
   let name = kind == `Unsafe ? unsafe_name(method.name) : method.name;
-  value_description(
-    ~name=Located.mk(name),
-    ~type_=method.signature,
-    ~prim=[],
-  )
+  let signature =
+    switch (kind, method.kind) {
+    | (`Unsafe, `Method) =>
+      ptyp_arrow(Nolabel, [%type: Jni.obj], method.signature)
+    | _ => method.signature
+    };
+  value_description(~name=Located.mk(name), ~type_=signature, ~prim=[])
   |> psig_value;
 };
 let emit_methods = (kind, methods) =>
