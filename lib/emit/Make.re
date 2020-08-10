@@ -1,7 +1,6 @@
 open Emit_Helper;
 open Basic_types;
 open Structures;
-open Java_class;
 open Lid;
 
 // TODO: keep same method order as in the bytecode
@@ -91,7 +90,9 @@ let emit = (required_class, t) => {
     |> List.map((method: java_method) => {
          pstr_value_alias(
            method.name,
-           emit_curried_method(t.name, env, method),
+           Env.function_lid(t.name, method.name, env)
+           |> Located.mk
+           |> pexp_ident,
          )
        });
   let constructors =
