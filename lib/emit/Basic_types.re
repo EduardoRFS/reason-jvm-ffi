@@ -11,16 +11,7 @@ module EnvMap = {
     let compare = compare_class_name;
   });
   let string_map_of_pairs = list => list |> List.to_seq |> StringMap.of_seq;
-
-  type value = {
-    env_clazz: Longident.t,
-    env_t: Longident.t,
-    env_unsafe_t: Longident.t,
-    env_fields: StringMap.t(Longident.t),
-    env_constructors: StringMap.t(Longident.t),
-    env_methods: StringMap.t(Longident.t),
-    env_functions: StringMap.t(Longident.t),
-  };
+  type value = Longident.t;
 };
 
 type java_type =
@@ -114,70 +105,25 @@ module Lid = {
       Lident("Class"),
       unsafe_lid("t"),
     ]);
+
+  module Name = {
+    let unsafe_jni_clazz = concat_lid([unsafe_module_lid, Lident("unsafe_jni_clazz")]);
+    let unsafe_t = concat_lid([unsafe_module_lid, Lident("unsafe_t")]);
+    let field = concat_lid([unsafe_module_lid, Lident("Field")]);
+    let constructor = concat_lid([unsafe_module_lid, Lident("Constructor")]);
+    let method_ = concat_lid([unsafe_module_lid, Lident("Method")]);
+    let function_ = concat_lid([unsafe_module_lid, Lident("Function")]);
+    let t = Lident("t");
+    let sub = Lident("sub");
+  };
 };
 
 module Env = {
   include EnvMap;
-
-  open Lid;
+  
   let update_name = (value, f, name, t) =>
     // TODO: what if doesn't exists
     t |> add(name, f(value, find(name, t)));
-  let set_fields = (fields, lid) => {
-    let env_fields =
-      fields
-      |> List.map((field: java_field) =>
-           (field.name, concat_lid([lid, unsafe_lid(field.name)]))
-         )
-      |> string_map_of_pairs;
-    update_name(env_fields, (env_fields, t) => {...t, env_fields});
-  };
-  let update_methods = (map, methods, lid) => {
-    let env_methods =
-      methods
-      |> List.map((method: java_method) =>
-           (method.name, concat_lid([lid, unsafe_lid(method.name)]))
-         )
-      |> string_map_of_pairs;
-    update_name(env_methods, map);
-  };
-  let set_constructors =
-    update_methods((env_constructors, t) => {...t, env_constructors});
-  let set_methods = update_methods((env_methods, t) => {...t, env_methods});
-  let set_functions =
-    update_methods((env_functions, t) => {...t, env_functions});
-
-  let add_empty_class = (class_name, lid) => {
-    let env_clazz = concat_lid([lid, unsafe_lid("jni_clazz")]);
-    let env_t = concat_lid([lid, Lident("t")]);
-    let env_unsafe_t = concat_lid([lid, unsafe_lid("t")]);
-
-    let value = {
-      env_clazz,
-      env_t,
-      env_unsafe_t,
-      env_fields: StringMap.empty,
-      env_constructors: StringMap.empty,
-      env_methods: StringMap.empty,
-      env_functions: StringMap.empty,
-    };
-    add(class_name, value);
-  };
-  let add_class = (~class_lid=None, clazz: java_class, lid, t) => {
-    let name = clazz.name;
-    let lid = s => concat_lid([lid, Lident(s)]);
-    let class_lid =
-      switch (class_lid) {
-      | Some(class_lid) => class_lid
-      | None => lid("Class")
-      };
-    t
-    |> add_empty_class(name, class_lid)
-    |> set_fields(clazz.fields, lid("Fields"), name)
-    |> set_constructors(clazz.constructors, lid("Constructors"), name)
-    |> set_methods(clazz.methods, lid("Methods"), name)
-    |> set_functions(clazz.functions, lid("Functions"), name);
-  };
 
   let sub_lid = (a: Longident.t, b: Longident.t) => {
     // TODO: this code is terrible
@@ -195,32 +141,24 @@ module Env = {
     Longident.unflatten(match) |> Option.get;
   };
 
-  let open_lid_value = (to_open, value) => {
-    let sub_lid = a => sub_lid(a, to_open);
-    let sub_lid_map = str_map => str_map |> StringMap.map(sub_lid);
-    {
-      env_clazz: sub_lid(value.env_clazz),
-      env_t: sub_lid(value.env_t),
-      env_unsafe_t: sub_lid(value.env_unsafe_t),
-      env_fields: sub_lid_map(value.env_fields),
-      env_constructors: sub_lid_map(value.env_constructors),
-      env_methods: sub_lid_map(value.env_methods),
-      env_functions: sub_lid_map(value.env_functions),
-    };
-  };
-  let open_lid = (to_open, t) => t |> map(open_lid_value(to_open));
+  let open_lid = (to_open, t) => t |> map(lid => sub_lid(lid, to_open));
 
-  let clazz_lid = (class_name, t) => (t |> find(class_name)).env_clazz;
-  let t_lid = (class_name, t) => (t |> find(class_name)).env_t;
-  let unsafe_t_lid = (class_name, t) => (t |> find(class_name)).env_unsafe_t;
-  let find_lid = (f, class_name, name, t) => {
-    let value = t |> find(class_name);
-    f(value) |> StringMap.find(name);
+  let access = (lid, class_name, t) => Lid.concat_lid([t |> find(class_name), lid]);
+
+
+  let clazz_lid = access(Lid.Name.unsafe_jni_clazz);
+  let unsafe_t_lid = access(Lid.Name.unsafe_t);
+  let t_lid = access(Lid.Name.t);
+  let sub_lid = access(Lid.Name.sub);
+
+  let find_lid = (base, class_name, name, t) => {
+    let module_lid = t |> find(class_name);
+    Lid.concat_lid([module_lid, base, Lident(name)]);
   };
-  let field_lid = find_lid(value => value.env_fields);
-  let constructor_lid = find_lid(value => value.env_constructors);
-  let method_lid = find_lid(value => value.env_methods);
-  let function_lid = find_lid(value => value.env_functions);
+  let field_lid = find_lid(Lid.Name.field);
+  let constructor_lid = find_lid(Lid.Name.constructor);
+  let method_lid = find_lid(Lid.Name.method_);
+  let function_lid = find_lid(Lid.Name.function_);
 };
 
 module Structures = {

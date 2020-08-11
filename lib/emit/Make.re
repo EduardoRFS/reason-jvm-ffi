@@ -14,13 +14,12 @@ let emit_constructor = (class_name, env, constructor: java_method) =>
 let emit_functor_env = (required_classes, t: java_class) => {
   let add_class = (env, clazz: java_class) => {
     let lid = concat_lid([class_lid(clazz.name), unsafe_module_lid]);
-    env |> Env.add_class(clazz, lid);
+    env |> Env.add(clazz.name, lid);
   };
   let add_self = (self: java_class, env) => {
     env
-    |> Env.add_class(
-         ~class_lid=Some(class_lid(self.name)),
-         self,
+    |> Env.add(
+         self.name,
          unsafe_module_lid,
        );
   };
