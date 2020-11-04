@@ -5,21 +5,17 @@
     "install": "esy-installer #{self.name}.install"
   },
   "dependencies": {
-    "@esy-ocaml/reason": "^3.6.0",
-    "@opam/dune": "~2.6.1",
-    "@opam/ocaml-migrate-parsetree": "1.7.3",
-    "@opam/ppx_deriving": "4.5",
-    "@opam/ppx_tools_versioned": "5.4.0",
-    "@opam/ppxlib": "0.14.0",
+    "@esy-ocaml/reason": "^3.6.2",
+    "@opam/dune": "^2.7.1",
+    "@opam/ppx_deriving": "5.1",
+    "@opam/ppx_tools_versioned": "^5.4.0",
+    "@opam/ppxlib": "^0.14.0",
     "camljava": "EduardoRFS/camljava:package.json",
     "javalib": "EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2",
     "ocaml": "~4.10.0",
     "refmterr": "^3.3.2"
   },
   "devDependencies": {
-    "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a50a85aacf2bf0479e7c8f8fd1a9fc977c2"
-  },
-  "resolutions": {
-    "@esy-ocaml/reason": "facebook/reason:reason.json#b8944528bb7996651222cb0685db8eaecd61d63e"
+    "@opam/ocaml-lsp-server": "*"
   }
 }
