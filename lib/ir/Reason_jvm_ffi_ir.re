@@ -18,3 +18,28 @@ type jvm_method = {
   jm_return: option(jvm_type),
   jm_kind: [ | `Constructor | `Method | `Function],
 };
+
+let rec jvm_type_to_string =
+  fun
+  | Boolean => "Z"
+  | Byte => "B"
+  | Char => "C"
+  | Short => "S"
+  | Int => "I"
+  | Long => "J"
+  | Float => "F"
+  | Double => "D"
+  | Object(jvm_classpath) => "L" ++ jvm_classpath ++ ";"
+  | Array(jvm_type) => "[" ++ jvm_type_to_string(jvm_type);
+let jvm_method_to_signature = method => {
+  let arguments =
+    method.jm_parameters
+    |> List.map(((_, jvm_type)) => jvm_type_to_string(jvm_type))
+    |> String.concat("");
+  let return =
+    switch (method.jm_return) {
+    | Some(jvm_type) => jvm_type_to_string(jvm_type)
+    | None => "V"
+    };
+  "(" ++ arguments ++ ")" ++ return;
+};
