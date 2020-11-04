@@ -67,7 +67,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
           ~signature="(I)V",
           Jvm_ffi_runtime.call_void_method,
           this,
-          [|Jvm_ffi_runtime.Int(something)|],
+          [|Jvm_ffi_runtime.Int(width)|],
         )
     ],
   );
@@ -92,7 +92,8 @@ describe("transform jvm_method to an expression", ({test, _}) => {
           ~signature="(Lcom/github/eduardorfs/AnotherClass;F)V",
           Jvm_ffi_runtime.call_void_method,
           this,
-          [|Jvm_ffi_runtime.Object(y), Jvm_ffi_runtime.Float(x)|],
+          // TODO: should objects have a wrapper like arrays?
+          [|Jvm_ffi_runtime.Obj(y), Jvm_ffi_runtime.Float(x)|],
         )
     ],
   );
@@ -112,7 +113,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
           ~signature="([I)V",
           Jvm_ffi_runtime.call_void_method,
           this,
-          [|Jvm_ffi_runtime.Array.to_jobject(items)|],
+          [|Jvm_ffi_runtime.Obj(Jvm_ffi_runtime.Array.to_jobject(items))|],
         )
     ],
   );
@@ -126,7 +127,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_kind: `Method,
     },
     [%expr
-      (this, ~items) =>
+      (this, ()) =>
         Jvm_ffi_runtime.Array.unsafe_of_jobject(
           Jvm_ffi_runtime.call_method(
             ~name="getItems",
@@ -251,7 +252,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_classpath: "com/github/eduardorfs/RandomClass",
       jm_name: "toInt",
       jm_parameters: [(Some("float"), Float)],
-      jm_return: None,
+      jm_return: Some(Int),
       jm_kind: `Function,
     },
     [%expr
