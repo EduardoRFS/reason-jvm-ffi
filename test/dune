@@ -1,0 +1,23 @@
+(library
+ (name reason_jvm_ffi_test)
+ (modules
+  (:standard \ TestRunner))
+ (library_flags
+  (-linkall -g))
+ (libraries rely.lib ocaml-migrate-parsetree reason reason_jvm_ffi_ir
+   reason_jvm_ffi_bindgen)
+ (preprocess
+  (pps ppx_tools_versioned.metaquot_410)))
+
+(executable
+ (name TestRunner)
+ (modules TestRunner)
+ (libraries reason_jvm_ffi_test)
+ (preprocess
+  (pps ppx_tools_versioned.metaquot_410)))
+
+(rule
+ (alias runtest)
+ (deps ./TestRunner.exe)
+ (action
+  (run %{deps})))
