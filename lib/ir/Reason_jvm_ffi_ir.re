@@ -19,6 +19,14 @@ type jvm_method = {
   jm_kind: [ | `Constructor | `Method | `Function],
 };
 
+type jvm_field = {
+  jf_classpath: jvm_classpath,
+  jf_name: string,
+  jf_type: jvm_type,
+  jf_final: bool,
+  jf_static: bool,
+};
+
 let rec jvm_type_to_string =
   fun
   | Boolean => "Z"

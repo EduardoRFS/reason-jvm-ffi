@@ -128,10 +128,12 @@ describe("transform jvm_method to an expression", ({test, _}) => {
     },
     [%expr
       (this, ()) =>
+        // TODO: can a function with ()[I return some other object?
         Jvm_ffi_runtime.Array.unsafe_of_jobject(
           Jvm_ffi_runtime.call_method(
             ~name="getItems",
             ~signature="()[I",
+            // TODO: hmm but what if the method returns a int[] is that a object?
             Jvm_ffi_runtime.call_object_method,
             this,
             [||],
@@ -267,5 +269,3 @@ describe("transform jvm_method to an expression", ({test, _}) => {
     ],
   );
 });
-
-// Jvm_ffi_runtime.array_to_argument
