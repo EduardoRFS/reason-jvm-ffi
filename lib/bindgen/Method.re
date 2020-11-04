@@ -1,21 +1,5 @@
 open Reason_jvm_ffi_ir;
-open Migrate_parsetree;
-
-module Ast_builder =
-  Ppxlib.Ast_builder.Make({
-    let loc = Location.none;
-  });
-open Ast_builder;
-let id = a => a;
-let loc = Located.mk;
-let pexp_fun = (args, ret) =>
-  List.fold_right(
-    ((label, arg), fn) => Ast_builder.pexp_fun(label, None, arg, fn),
-    args,
-    ret,
-  );
-
-let this_id = "this";
+open Utils;
 
 let parameters_with_identifier = parameters =>
   parameters
@@ -71,15 +55,7 @@ let gen_argument = ((_, identifier, jvm_type)) => {
 let gen_runtime_jni_caller_name = method => {
   let type_name =
     switch (method.jm_return) {
-    | Some(Boolean) => "boolean"
-    | Some(Byte) => "byte"
-    | Some(Char) => "char"
-    | Some(Short) => "short"
-    | Some(Int) => "int"
-    | Some(Long) => "long"
-    | Some(Float) => "float"
-    | Some(Double) => "double"
-    | Some(Object(_) | Array(_)) => "object"
+    | Some(jvm_type) => jvm_type_to_runtimelib_name(jvm_type)
     | None => "void"
     };
   let prefix =
@@ -96,9 +72,7 @@ let gen_runtime_call = (method, parameters_with_identifier) => {
   let signature = jvm_method_to_signature(method) |> estring;
   let runtime_jni_caller = gen_runtime_jni_caller_name(method);
   // TODO: remove this find_class
-  let find_class_expr = [%expr
-    Jvm_ffi_runtime.find_class([%e estring(method.jm_classpath)])
-  ];
+  let find_class_expr = find_class_expr(method.jm_classpath);
   let arguments =
     parameters_with_identifier
     |> List.map(gen_argument)
@@ -112,7 +86,7 @@ let gen_runtime_call = (method, parameters_with_identifier) => {
             ~name=[%e name],
             ~signature=[%e signature],
             [%e runtime_jni_caller],
-            this,
+            [%e evar(this_id)],
             [%e arguments],
           )
         ],

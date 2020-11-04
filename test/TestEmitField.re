@@ -36,7 +36,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
     {
       jf_classpath: "com/github/eduardorfs/RandomClass",
       jf_name: "weight",
-      jf_type: Int,
+      jf_type: Float,
       jf_final: false,
       jf_static: false,
     },
@@ -45,8 +45,8 @@ describe("transform jvm_method to an expression", ({test, _}) => {
         Jvm_ffi_runtime.make_field(
           ~name="weight",
           ~signature="F",
-          ~getter=Jvm_ffi_runtime.get_int_field,
-          ~setter=Jvm_ffi_runtime.set_int_field,
+          ~getter=Jvm_ffi_runtime.get_float_field,
+          ~setter=Jvm_ffi_runtime.set_float_field,
           this,
         )
     ],
@@ -66,29 +66,8 @@ describe("transform jvm_method to an expression", ({test, _}) => {
         Jvm_ffi_runtime.make_field(
           ~name="height",
           ~signature="I",
-          ~getter=Jvm_ffi_runtime.get_float_field,
-          ~setter=Jvm_ffi_runtime.set_float_field,
-          this,
-        )
-    ],
-  );
-  test(
-    "final int height",
-    {
-      jf_classpath: "com/github/eduardorfs/RandomClass",
-      jf_name: "height",
-      jf_type: Int,
-      // TODO: should the low level API consider the final? maybe only the value
-      jf_final: true,
-      jf_static: false,
-    },
-    [%expr
-      this =>
-        Jvm_ffi_runtime.make_field(
-          ~name="height",
-          ~signature="I",
-          ~getter=Jvm_ffi_runtime.get_float_field,
-          ~setter=Jvm_ffi_runtime.set_float_field,
+          ~getter=Jvm_ffi_runtime.get_int_field,
+          ~setter=Jvm_ffi_runtime.set_int_field,
           this,
         )
     ],
@@ -107,8 +86,8 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       Jvm_ffi_runtime.make_global_variable(
         ~name="manager",
         ~signature="Lcom/github/eduardorfs/Anotherlass;",
-        ~getter=Jvm_ffi_runtime.get_object_field,
-        ~setter=Jvm_ffi_runtime.set_object_field,
+        ~getter=Jvm_ffi_runtime.get_static_object_field,
+        ~setter=Jvm_ffi_runtime.set_static_object_field,
         Jvm_ffi_runtime.find_class("com/github/eduardorfs/RandomClass"),
       )
     ],
@@ -126,9 +105,9 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       // TODO: also should be only getter?
       Jvm_ffi_runtime.make_global_variable(
         ~name="unixEpoch",
-        ~signature="Lcom/github/eduardorfs/Anotherlass;",
-        ~getter=Jvm_ffi_runtime.get_object_field,
-        ~setter=Jvm_ffi_runtime.set_object_field,
+        ~signature="D",
+        ~getter=Jvm_ffi_runtime.get_static_double_field,
+        ~setter=Jvm_ffi_runtime.set_static_double_field,
         Jvm_ffi_runtime.find_class("com/github/eduardorfs/RandomClass"),
       )
     ],
