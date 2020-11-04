@@ -1,0 +1,3 @@
+(library
+ (name reason_jvm_ffi_lib_ir)
+ (public_name reason-java-ffi.lib.ir))
