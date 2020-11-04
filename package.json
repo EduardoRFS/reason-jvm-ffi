@@ -10,12 +10,12 @@
     "@opam/ppx_deriving": "5.1",
     "@opam/ppx_tools_versioned": "^5.4.0",
     "@opam/ppxlib": "^0.14.0",
+    "@reason-native/rely": "^3.2.1",
     "camljava": "EduardoRFS/camljava:package.json",
-    "javalib": "EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2",
+    "javalib":
+      "EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2",
     "ocaml": "~4.10.0",
     "refmterr": "^3.3.2"
   },
-  "devDependencies": {
-    "@opam/ocaml-lsp-server": "*"
-  }
+  "devDependencies": { "@opam/ocaml-lsp-server": "*" }
 }
