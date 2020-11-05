@@ -14,10 +14,10 @@
     "@reason-native/rely": "^3.2.1",
     "camljava": "EduardoRFS/camljava:package.json",
     "javalib": "EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302",
-    "ocaml": "~4.10.0",
-    "refmterr": "^3.3.2"
+    "ocaml": "~4.10.0"
   },
   "devDependencies": {
-    "@opam/ocaml-lsp-server": "*"
+    "@opam/ocaml-lsp-server": "*",
+    "refmterr": "^3.3.2"
   }
 }
