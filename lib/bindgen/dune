@@ -1,6 +1,6 @@
 (library
  (name reason_jvm_ffi_bindgen)
- (public_name reason-java-ffi.bindgen)
+ (public_name reason-jvm-ffi.bindgen)
  (libraries ocaml-migrate-parsetree reason_jvm_ffi_ir ppxlib)
  (preprocess
   (pps ppx_tools_versioned.metaquot_410)))

@@ -1,6 +1,6 @@
-# reason-java-ffi
+# reason-jvm-ffi
 
-The goal of this project is to provide a way to make the Java ecossystem accessible from OCaml
+The goal of this project is to provide a way to make the JVM ecossystem accessible from OCaml
 
 ## How it works?
 

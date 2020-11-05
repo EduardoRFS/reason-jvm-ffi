@@ -5,7 +5,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
   let test = (name, file, output) => {
     let run_test = suite => {
       let ic = open_in_bin(file);
-      let input = Reason_java_ffi_lib_parse.Parse.parse_bytecode(ic);
+      let input = Reason_jvm_ffi_parse.Parse.parse_bytecode(ic);
       close_in(ic);
       Helpers.compare_jvm_class(input, output, suite);
     };

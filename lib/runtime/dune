@@ -1,4 +1,4 @@
 (library
  (name jvm_ffi_runtime)
- (public_name reason-java-ffi.runtime)
+ (public_name reason-jvm-ffi.runtime)
  (libraries camljava.lib))

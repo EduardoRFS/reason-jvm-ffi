@@ -1,4 +1,4 @@
-open Reason_java_ffi_lib_emit;
+open Reason_jvm_ffi_emit;
 open Basic_types;
 
 open Javalib_pack;

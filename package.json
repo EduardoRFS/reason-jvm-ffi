@@ -1,5 +1,5 @@
 {
-  "name": "reason-java-ffi",
+  "name": "reason-jvm-ffi",
   "esy": {
     "build": "dune build -p #{self.name}",
     "install": "esy-installer #{self.name}.install"
