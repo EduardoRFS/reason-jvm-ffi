@@ -46,4 +46,4 @@ let files = Arg.(value & pos_all(file, []) & info([], ~docv="FILE"));
 
 let generate_t = Term.(const(generate) $ print $ files);
 let () =
-  Term.exit @@ Term.eval((generate_t, Term.info("reason-jvm-generate")));
+  Term.exit @@ Term.eval((generate_t, Term.info("reason-jvm-low-level")));
