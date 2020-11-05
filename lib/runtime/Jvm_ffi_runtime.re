@@ -35,7 +35,7 @@ let call_method = (~name, ~signature, to_call, this, args) => {
   let method_id = Jni.get_methodID(clazz, name, signature);
   to_call(this, method_id, args);
 };
-let call_function = (~name, ~signature, clazz, to_call, args) => {
+let call_function = (~name, ~signature, to_call, clazz, args) => {
   let method_id = Jni.get_static_methodID(clazz, name, signature);
   to_call(clazz, method_id, args);
 };

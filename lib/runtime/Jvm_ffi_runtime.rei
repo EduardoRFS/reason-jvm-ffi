@@ -44,8 +44,8 @@ let call_function:
   (
     ~name: string,
     ~signature: string,
-    Jni.clazz,
     (Jni.clazz, Jni.methodID, array(Jni.argument)) => 'a,
+    Jni.clazz,
     array(Jni.argument)
   ) =>
   'a;
