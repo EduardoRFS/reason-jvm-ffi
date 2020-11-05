@@ -47,3 +47,6 @@ let call_constructor = (~signature, clazz, args) => {
   call_method(~name, ~signature, Jni.call_void_method, obj, args);
   obj;
 };
+
+// TODO: this is hackish as hell
+let set_static_object_field = Camljava.Jni.set_static_obj_field;

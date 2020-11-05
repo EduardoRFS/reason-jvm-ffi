@@ -49,3 +49,5 @@ let call_function:
     array(Jni.argument)
   ) =>
   'a;
+
+let set_static_object_field: (Jni.clazz, Jni.fieldID, Jni.obj) => unit;
