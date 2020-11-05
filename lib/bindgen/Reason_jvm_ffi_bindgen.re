@@ -3,4 +3,4 @@ open Parsetree;
 
 let gen_field: jvm_field => expression = Field.gen_field;
 let gen_method: jvm_method => expression = Method.gen_method;
-let gen_class: jvm_class => structure = _ => failwith("Not implemented");
+let gen_class: jvm_class => structure = Class.gen_class;

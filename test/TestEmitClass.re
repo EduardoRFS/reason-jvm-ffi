@@ -33,7 +33,7 @@ describe("transform jvm_class to a structure", ({test, _}) => {
       jc_fields: [],
       jc_methods: [],
     },
-    [%str {}],
+    [%str],
   );
   test(
     "single field",
@@ -95,6 +95,33 @@ describe("transform jvm_class to a structure", ({test, _}) => {
           Jvm_ffi_runtime.call_int_method,
           this,
           [||],
+        )
+    ],
+  );
+  test(
+    "keep order",
+    {
+      jc_classpath: "com/github/eduardorfs/RandomClass",
+      jc_fields: [width_field, {...width_field, jf_name: "height"}],
+      jc_methods: [],
+    },
+    // TODO: maybe width_field_1 and width_method_1?
+    [%str
+      let width = this =>
+        Jvm_ffi_runtime.make_field(
+          ~name="width",
+          ~signature="I",
+          ~getter=Jvm_ffi_runtime.get_int_field,
+          ~setter=Jvm_ffi_runtime.set_int_field,
+          this,
+        );
+      let height = this =>
+        Jvm_ffi_runtime.make_field(
+          ~name="height",
+          ~signature="I",
+          ~getter=Jvm_ffi_runtime.get_int_field,
+          ~setter=Jvm_ffi_runtime.set_int_field,
+          this,
         )
     ],
   );

@@ -7,6 +7,7 @@ module Ast_builder =
 include Ast_builder;
 include Ast_410.Asttypes;
 
+module StringMap = Map.Make(String);
 let id = a => a;
 let loc = Located.mk;
 let pexp_fun = (args, ret) =>
