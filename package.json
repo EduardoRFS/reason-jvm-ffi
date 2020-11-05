@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@esy-ocaml/reason": "^3.6.2",
+    "@opam/cmdliner": "1.0.4",
     "@opam/dune": "^2.7.1",
     "@opam/ppx_deriving": "5.1",
     "@opam/ppx_tools_versioned": "^5.4.0",
