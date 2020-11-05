@@ -181,6 +181,8 @@ let jclass_to_java_class = jclass => {
   };
 };
 
+let parse_bytecode = _ => failwith("Not implemented");
+
 let create_env_and_package = (folder, classes) => {
   let class_path = class_path(folder);
   let classes =
