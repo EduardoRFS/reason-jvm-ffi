@@ -1,0 +1,4 @@
+(executable
+ (name low_level)
+ (public_name reason-jvm-low-level)
+ (libraries reason_jvm_ffi_parse reason_jvm_ffi_bindgen cmdliner reason))
