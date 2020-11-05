@@ -1,5 +1,5 @@
 {
-  "checksum": "06474980969b118f9b77b48d71854392",
+  "checksum": "5acffaaeb6ef6002aeaf85dda63f5797",
   "root": "reason-java-ffi@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -50,7 +50,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.10.1002@d41d8cd9",
-        "javalib@github:EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2@d41d8cd9",
+        "javalib@github:EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302@d41d8cd9",
         "camljava@github:EduardoRFS/camljava:package.json#eda39bf4ae543e7e838b054dd02b0e0d9d38b1ef@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
         "@opam/ppxlib@opam:0.14.0@6168b34e",
@@ -74,22 +74,22 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "javalib@github:EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2@d41d8cd9": {
+    "javalib@github:EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302@d41d8cd9": {
       "id":
-        "javalib@github:EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2@d41d8cd9",
+        "javalib@github:EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302@d41d8cd9",
       "name": "javalib",
       "version":
-        "github:EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2",
+        "github:EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302",
       "source": {
         "type": "install",
         "source": [
-          "github:EduardoRFS/javalib:package.json#c7e2156efb63ce503679f7aa94c59dd73e9e5dc2"
+          "github:EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302"
         ]
       },
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.1002@d41d8cd9", "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
-        "@opam/extlib@opam:1.7.7@750728e7",
+        "@opam/extlib@opam:1.7.7@750728e7", "@opam/dune@opam:2.7.1@f5f493bc",
         "@opam/containers@opam:3.0.1@6fea78e4",
         "@opam/conf-which@opam:1@61ea698f",
         "@opam/camlzip@opam:1.10@552c24df"
