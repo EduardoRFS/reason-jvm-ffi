@@ -22,3 +22,8 @@ let compare_str = (result, expected, {Rely.expect, _}) => {
   let expected = print_str(expected);
   expect.string(result).toEqual(expected);
 };
+let compare_jvm_class = (result, expected, {Rely.expect, _}) => {
+  let result = Reason_jvm_ffi_ir.show_jvm_class(result);
+  let expected = Reason_jvm_ffi_ir.show_jvm_class(expected);
+  expect.string(result).toEqual(expected);
+};

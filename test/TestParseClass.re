@@ -3,11 +3,11 @@ open Reason_jvm_ffi_ir;
 
 describe("parse .class to jvm_class", ({test, _}) => {
   let test = (name, file, output) => {
-    let run_test = ({expect, _}) => {
+    let run_test = suite => {
       let ic = open_in_bin(file);
       let input = Reason_java_ffi_lib_parse.Parse.parse_bytecode(ic);
       close_in(ic);
-      expect.equal(input, output);
+      Helpers.compare_jvm_class(input, output, suite);
     };
     test(name, run_test);
   };
@@ -37,17 +37,18 @@ describe("parse .class to jvm_class", ({test, _}) => {
       jc_methods: [
         {
           jm_classpath: "com/github/eduardorfs/Object2D",
-          jm_name: "<init>",
-          jm_parameters: [],
-          jm_return: None,
-          jm_kind: `Constructor,
-        },
-        {
-          jm_classpath: "com/github/eduardorfs/Object2D",
           jm_name: "getWidth",
           jm_parameters: [],
           jm_return: Some(Int),
           jm_kind: `Method,
+        },
+        // TODO: probably this terrible order is because of javalib fixes it
+        {
+          jm_classpath: "com/github/eduardorfs/Object2D",
+          jm_name: "<init>",
+          jm_parameters: [],
+          jm_return: None,
+          jm_kind: `Constructor,
         },
         {
           jm_classpath: "com/github/eduardorfs/Object2D",
@@ -76,22 +77,8 @@ describe("parse .class to jvm_class", ({test, _}) => {
       jc_methods: [
         {
           jm_classpath: "com/github/eduardorfs/Potato",
-          jm_name: "<init>",
-          jm_parameters: [],
-          jm_return: None,
-          jm_kind: `Constructor,
-        },
-        {
-          jm_classpath: "com/github/eduardorfs/Potato",
           jm_name: "getTemperature",
           jm_parameters: [],
-          jm_return: Some(Int),
-          jm_kind: `Method,
-        },
-        {
-          jm_classpath: "com/github/eduardorfs/Potato",
-          jm_name: "getTemperature",
-          jm_parameters: [(Some("offset"), Int)],
           jm_return: Some(Int),
           jm_kind: `Method,
         },
@@ -100,6 +87,20 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "setTemperature",
           jm_parameters: [(Some("temperature"), Int)],
           jm_return: None,
+          jm_kind: `Method,
+        },
+        {
+          jm_classpath: "com/github/eduardorfs/Potato",
+          jm_name: "<init>",
+          jm_parameters: [],
+          jm_return: None,
+          jm_kind: `Constructor,
+        },
+        {
+          jm_classpath: "com/github/eduardorfs/Potato",
+          jm_name: "getTemperature",
+          jm_parameters: [(Some("offset"), Int)],
+          jm_return: Some(Int),
           jm_kind: `Method,
         },
       ],
@@ -114,13 +115,6 @@ describe("parse .class to jvm_class", ({test, _}) => {
       jc_methods: [
         {
           jm_classpath: "com/github/eduardorfs/Square",
-          jm_name: "<init>",
-          jm_parameters: [],
-          jm_return: None,
-          jm_kind: `Constructor,
-        },
-        {
-          jm_classpath: "com/github/eduardorfs/Square",
           jm_name: "double_object",
           jm_parameters: [
             (Some("i"), Object("com/github/eduardorfs/Object2D")),
@@ -129,6 +123,13 @@ describe("parse .class to jvm_class", ({test, _}) => {
           ],
           jm_return: Some(Object("java/lang/Object")),
           jm_kind: `Function,
+        },
+        {
+          jm_classpath: "com/github/eduardorfs/Square",
+          jm_name: "<init>",
+          jm_parameters: [],
+          jm_return: None,
+          jm_kind: `Constructor,
         },
       ],
     },
