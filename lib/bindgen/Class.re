@@ -2,11 +2,17 @@ open Reason_jvm_ffi_ir;
 open Utils;
 
 let escape_duplicated_names = clazz => {
+  let escape_method_name =
+    fun
+    | "<init>" => "make"
+    | str => str;
   let fields_and_methods =
     (clazz.jc_fields |> List.map(field => (field.jf_name, `Field(field))))
     @ (
       clazz.jc_methods
-      |> List.map(method => (method.jm_name, `Method(method)))
+      |> List.map(method =>
+           (escape_method_name(method.jm_name), `Method(method))
+         )
     );
   let all_names =
     fields_and_methods

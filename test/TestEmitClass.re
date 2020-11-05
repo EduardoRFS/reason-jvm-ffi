@@ -11,6 +11,13 @@ describe("transform jvm_class to a structure", ({test, _}) => {
     test(name, run_test);
   };
 
+  let constructor = {
+    jm_classpath: "com/github/eduardorfs/RandomClass",
+    jm_name: "<init>",
+    jm_parameters: [],
+    jm_return: None,
+    jm_kind: `Constructor,
+  };
   let width_field = {
     jf_classpath: "com/github/eduardorfs/RandomClass",
     jf_name: "width",
@@ -72,11 +79,32 @@ describe("transform jvm_class to a structure", ({test, _}) => {
     ],
   );
   test(
+    "constructor name mangling",
+    {
+      jc_classpath: "com/github/eduardorfs/RandomClass",
+      jc_fields: [],
+      jc_methods: [constructor],
+    },
+    [%str
+      let make = () =>
+        Jvm_ffi_runtime.call_constructor(
+          ~signature="()V",
+          // TODO: avoid duplicated class instance
+          Jvm_ffi_runtime.find_class("com/github/eduardorfs/RandomClass"),
+          [||],
+        )
+    ],
+  );
+  test(
     "name colision",
     {
       jc_classpath: "com/github/eduardorfs/RandomClass",
       jc_fields: [width_field],
-      jc_methods: [{...get_width_method, jm_name: "width"}],
+      jc_methods: [
+        {...get_width_method, jm_name: "width"},
+        constructor,
+        {...get_width_method, jm_name: "make"},
+      ],
     },
     // TODO: maybe width_field_1 and width_method_1?
     [%str
@@ -91,6 +119,21 @@ describe("transform jvm_class to a structure", ({test, _}) => {
       let width_2 = (this, ()) =>
         Jvm_ffi_runtime.call_method(
           ~name="width",
+          ~signature="()I",
+          Jvm_ffi_runtime.call_int_method,
+          this,
+          [||],
+        );
+      let make_1 = () =>
+        Jvm_ffi_runtime.call_constructor(
+          ~signature="()V",
+          // TODO: avoid duplicated class instance
+          Jvm_ffi_runtime.find_class("com/github/eduardorfs/RandomClass"),
+          [||],
+        );
+      let make_2 = (this, ()) =>
+        Jvm_ffi_runtime.call_method(
+          ~name="make",
           ~signature="()I",
           Jvm_ffi_runtime.call_int_method,
           this,
