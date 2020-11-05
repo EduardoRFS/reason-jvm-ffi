@@ -100,7 +100,9 @@ let parse_jclass = jclass => {
   let jc_methods =
     jclass.c_methods
     |> MethodMap.value_elements
-    |> List.map(parse_jmethod(jc_classpath));
+    |> List.map(parse_jmethod(jc_classpath))
+    // TODO: probably this shouldn't be here
+    |> List.filter(method => method.jm_name != "<clinit>");
   {jc_classpath, jc_fields, jc_methods};
 };
 let in_channel_to_jclass = ic => {

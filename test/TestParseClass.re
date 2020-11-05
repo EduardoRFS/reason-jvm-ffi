@@ -134,4 +134,52 @@ describe("parse .class to jvm_class", ({test, _}) => {
       ],
     },
   );
+  test(
+    "static method, static analyzer, constructor",
+    "./MLManager.class",
+    {
+      jc_classpath: "com/github/eduardorfs/MLManager",
+      jc_fields: [
+        {
+          jf_classpath: "com/github/eduardorfs/MLManager",
+          jf_name: "callback",
+          jf_type: Object("fr/inria/caml/camljava/Callback"),
+          jf_final: false,
+          jf_static: true,
+        },
+      ],
+      jc_methods: [
+        // TODO: I think clinit should be removed at the emitter
+        // {
+        //   jm_classpath: "com/github/eduardorfs/MLManager",
+        //   jm_name: "<clinit>",
+        //   jm_parameters: [],
+        //   jm_return: None,
+        //   jm_kind: `Function,
+        // },
+        // TODO: should bootOcaml be here?
+        {
+          jm_classpath: "com/github/eduardorfs/MLManager",
+          jm_name: "bootOcaml",
+          jm_parameters: [],
+          jm_return: None,
+          jm_kind: `Function,
+        },
+        {
+          jm_classpath: "com/github/eduardorfs/MLManager",
+          jm_name: "getCallback",
+          jm_parameters: [],
+          jm_return: Some(Object("fr/inria/caml/camljava/Callback")),
+          jm_kind: `Function,
+        },
+        {
+          jm_classpath: "com/github/eduardorfs/MLManager",
+          jm_name: "<init>",
+          jm_parameters: [],
+          jm_return: None,
+          jm_kind: `Constructor,
+        },
+      ],
+    },
+  );
 });

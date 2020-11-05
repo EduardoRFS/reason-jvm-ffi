@@ -24,6 +24,7 @@
   (:test ./TestRunner.exe)
   Object2D.class
   Square.class
-  Potato.class)
+  Potato.class
+  MLManager.class)
  (action
   (run %{test})))
