@@ -2,7 +2,7 @@ open Migrate_parsetree;
 open Setup;
 open Reason_jvm_ffi_ir;
 
-describe("transform jvm_method to an expression", ({test, _}) => {
+describe("transform jvm_field to an expression", ({test, _}) => {
   let test = (name, input, output) => {
     let run_test = suite => {
       let input = Reason_jvm_ffi_bindgen.gen_field(input);

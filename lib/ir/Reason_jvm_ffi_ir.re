@@ -11,6 +11,14 @@ type jvm_type =
   | Object(jvm_classpath)
   | Array(jvm_type);
 
+type jvm_field = {
+  jf_classpath: jvm_classpath,
+  jf_name: string,
+  jf_type: jvm_type,
+  jf_final: bool,
+  jf_static: bool,
+};
+
 type jvm_method = {
   jm_classpath: jvm_classpath,
   jm_name: string,
@@ -19,12 +27,10 @@ type jvm_method = {
   jm_kind: [ | `Constructor | `Method | `Function],
 };
 
-type jvm_field = {
-  jf_classpath: jvm_classpath,
-  jf_name: string,
-  jf_type: jvm_type,
-  jf_final: bool,
-  jf_static: bool,
+type jvm_class = {
+  jc_classpath: jvm_classpath,
+  jc_fields: list(jvm_field),
+  jc_methods: list(jvm_method),
 };
 
 let rec jvm_type_to_string =
