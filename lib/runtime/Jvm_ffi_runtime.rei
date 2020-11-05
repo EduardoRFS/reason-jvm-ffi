@@ -7,7 +7,8 @@ module Ref: {
 
 type ref('a) = Ref.ref('a);
 
-module Jni = Camljava.Jni;
+open Camljava;
+include (module type of Camljava.Jni);
 
 let make_field:
   (
