@@ -1,4 +1,7 @@
+[@deriving show]
 type jvm_classpath = string;
+
+[@deriving show]
 type jvm_type =
   | Boolean
   | Byte
@@ -11,6 +14,7 @@ type jvm_type =
   | Object(jvm_classpath)
   | Array(jvm_type);
 
+[@deriving show]
 type jvm_field = {
   jf_classpath: jvm_classpath,
   jf_name: string,
@@ -19,6 +23,7 @@ type jvm_field = {
   jf_static: bool,
 };
 
+[@deriving show]
 type jvm_method = {
   jm_classpath: jvm_classpath,
   jm_name: string,
@@ -27,6 +32,7 @@ type jvm_method = {
   jm_kind: [ | `Constructor | `Method | `Function],
 };
 
+[@deriving show]
 type jvm_class = {
   jc_classpath: jvm_classpath,
   jc_fields: list(jvm_field),

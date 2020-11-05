@@ -1,3 +1,5 @@
 (library
  (name reason_jvm_ffi_ir)
- (public_name reason-java-ffi.ir))
+ (public_name reason-java-ffi.ir)
+ (preprocess
+  (pps ppx_deriving.show)))
