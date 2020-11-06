@@ -10,6 +10,12 @@ type ref('a) = Ref.ref('a);
 open Camljava;
 include (module type of Camljava.Jni);
 
+module Array: {
+  type t;
+  let unsafe_of_jobject: Jni.obj => t;
+  let to_jobject: t => Jni.obj;
+};
+
 let make_field:
   (
     ~name: string,

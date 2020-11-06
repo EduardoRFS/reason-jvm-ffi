@@ -13,6 +13,12 @@ type ref('a) = Ref.ref('a);
 module Jni = Camljava.Jni;
 include Jni;
 
+module Array = {
+  type t = Jni.obj;
+  let unsafe_of_jobject = a => a;
+  let to_jobject = a => a;
+};
+
 let make_field = (~name, ~signature, ~getter, ~setter, this) => {
   let clazz = Jni.get_object_class(this);
   let field_id = Jni.get_fieldID(clazz, name, signature);
@@ -23,7 +29,7 @@ let make_field = (~name, ~signature, ~getter, ~setter, this) => {
 };
 
 let make_global_variable = (~name, ~signature, ~getter, ~setter, clazz) => {
-  let field_id = Jni.get_fieldID(clazz, name, signature);
+  let field_id = Jni.get_static_fieldID(clazz, name, signature);
   Ref.make(
     () => getter(clazz, field_id),
     value => setter(clazz, field_id, value),
@@ -49,4 +55,7 @@ let call_constructor = (~signature, clazz, args) => {
 };
 
 // TODO: this is hackish as hell
-let set_static_object_field = Camljava.Jni.set_static_obj_field;
+let set_static_object_field = (a, b, c) => {
+  print_endline("static go");
+  Camljava.Jni.set_static_obj_field(a, b, c);
+};
