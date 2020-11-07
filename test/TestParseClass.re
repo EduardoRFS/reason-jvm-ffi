@@ -40,6 +40,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "getWidth",
           jm_parameters: [],
           jm_return: Some(Int),
+          jm_abstract: false,
           jm_kind: `Method,
         },
         // TODO: probably this terrible order is because of javalib fixes it
@@ -48,6 +49,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "<init>",
           jm_parameters: [],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Constructor,
         },
         {
@@ -55,6 +57,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "getHeight",
           jm_parameters: [],
           jm_return: Some(Int),
+          jm_abstract: false,
           jm_kind: `Method,
         },
       ],
@@ -80,6 +83,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "getTemperature",
           jm_parameters: [],
           jm_return: Some(Int),
+          jm_abstract: false,
           jm_kind: `Method,
         },
         {
@@ -87,6 +91,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "setTemperature",
           jm_parameters: [(Some("temperature"), Int)],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Method,
         },
         {
@@ -94,6 +99,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "<init>",
           jm_parameters: [],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Constructor,
         },
         {
@@ -101,6 +107,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "getTemperature",
           jm_parameters: [(Some("offset"), Int)],
           jm_return: Some(Int),
+          jm_abstract: false,
           jm_kind: `Method,
         },
       ],
@@ -122,6 +129,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
             (Some("b"), Object("java/lang/Object")),
           ],
           jm_return: Some(Object("java/lang/Object")),
+          jm_abstract: false,
           jm_kind: `Function,
         },
         {
@@ -129,6 +137,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "<init>",
           jm_parameters: [],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Constructor,
         },
       ],
@@ -163,6 +172,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "bootOcaml",
           jm_parameters: [],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Function,
         },
         {
@@ -170,6 +180,7 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "getCallback",
           jm_parameters: [],
           jm_return: Some(Object("fr/inria/caml/camljava/Callback")),
+          jm_abstract: false,
           jm_kind: `Function,
         },
         {
@@ -177,9 +188,11 @@ describe("parse .class to jvm_class", ({test, _}) => {
           jm_name: "<init>",
           jm_parameters: [],
           jm_return: None,
+          jm_abstract: false,
           jm_kind: `Constructor,
         },
       ],
     },
   );
+  // TODO: abstractmethod
 });

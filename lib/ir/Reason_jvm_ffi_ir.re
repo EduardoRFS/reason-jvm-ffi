@@ -28,7 +28,10 @@ type jvm_method = {
   jm_classpath: jvm_classpath,
   jm_name: string,
   jm_parameters: list((option(string), jvm_type)),
+  // TODO: constructors cannot have a return type?
   jm_return: option(jvm_type),
+  // TODO: functions cannot be abstract
+  jm_abstract: bool,
   jm_kind: [ | `Constructor | `Method | `Function],
 };
 

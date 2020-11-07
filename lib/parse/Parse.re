@@ -36,9 +36,25 @@ let parse_class_field = (classpath, field) => {
   let jf_static = field.cf_static;
   {jf_classpath: classpath, jf_name, jf_type, jf_final, jf_static};
 };
-let parse_jmethod = (jm_classpath, jmethod) => {
+let parse_jmethod = (jm_classpath, jmethod) =>
   switch (jmethod) {
-  | AbstractMethod(_) => failwith("Not implemented AbstractMethod")
+  | AbstractMethod(abstract_method) =>
+    let signature = abstract_method.am_signature;
+
+    let jm_name = ms_name(signature);
+    let jm_parameters =
+      // TODO: use source to get naming for abstract signatures
+      ms_args(signature)
+      |> List.map(parse_value_type)
+      |> List.map(jvm_type => (None, jvm_type));
+    let jm_return = ms_rtype(signature) |> Option.map(parse_value_type);
+    let jm_abstract = true;
+    let jm_kind =
+      switch (jm_name) {
+      | "<init>" => `Constructor
+      | _ => `Method
+      };
+    {jm_classpath, jm_name, jm_parameters, jm_return, jm_abstract, jm_kind};
   | ConcreteMethod(concrete_method) =>
     let signature = concrete_method.cm_signature;
 
@@ -87,9 +103,9 @@ let parse_jmethod = (jm_classpath, jmethod) => {
 
            (name, jvm_type);
          });
-    {jm_classpath, jm_name, jm_parameters, jm_return, jm_kind};
+    let jm_abstract = false;
+    {jm_classpath, jm_name, jm_parameters, jm_return, jm_abstract, jm_kind};
   };
-};
 
 let parse_jclass = jclass => {
   let jc_classpath = parse_class_name(jclass.c_name);

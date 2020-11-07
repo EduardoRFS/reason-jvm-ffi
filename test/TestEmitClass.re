@@ -16,6 +16,7 @@ describe("transform jvm_class to a structure", ({test, _}) => {
     jm_name: "<init>",
     jm_parameters: [],
     jm_return: None,
+    jm_abstract: false,
     jm_kind: `Constructor,
   };
   let width_field = {
@@ -30,6 +31,7 @@ describe("transform jvm_class to a structure", ({test, _}) => {
     jm_name: "getWidth",
     jm_parameters: [],
     jm_return: Some(Int),
+    jm_abstract: false,
     jm_kind: `Method,
   };
 

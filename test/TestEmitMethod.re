@@ -18,6 +18,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "doMagic",
       jm_parameters: [],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -38,6 +39,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "getWidth",
       jm_parameters: [],
       jm_return: Some(Int),
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -58,6 +60,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "setWidth",
       jm_parameters: [(Some("width"), Int)],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -83,6 +86,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
         (Some("x"), Float),
       ],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -104,6 +108,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "addItems",
       jm_parameters: [(Some("items"), Array(Int))],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -124,6 +129,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "getItems",
       jm_parameters: [],
       jm_return: Some(Array(Int)),
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -152,6 +158,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
         (None, Char),
       ],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Method,
     },
     [%expr
@@ -177,6 +184,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_parameters: [],
       // TODO: maybe do a variant, as constructor always has no return
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Constructor,
     },
     [%expr
@@ -196,6 +204,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "<init>",
       jm_parameters: [(Some("valid"), Boolean)],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Constructor,
     },
     [%expr
@@ -215,6 +224,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "logTuturu",
       jm_parameters: [],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Function,
     },
     [%expr
@@ -235,6 +245,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "printInt",
       jm_parameters: [(Some("x"), Int)],
       jm_return: None,
+      jm_abstract: false,
       jm_kind: `Function,
     },
     [%expr
@@ -255,6 +266,7 @@ describe("transform jvm_method to an expression", ({test, _}) => {
       jm_name: "toInt",
       jm_parameters: [(Some("float"), Float)],
       jm_return: Some(Int),
+      jm_abstract: false,
       jm_kind: `Function,
     },
     [%expr
@@ -265,6 +277,27 @@ describe("transform jvm_method to an expression", ({test, _}) => {
           Jvm_ffi_runtime.call_static_int_method,
           Jvm_ffi_runtime.find_class("com/github/eduardorfs/RandomClass"),
           [|Jvm_ffi_runtime.Float(float)|],
+        )
+    ],
+  );
+  test(
+    "abstract method without parameters",
+    {
+      jm_classpath: "com/github/eduardorfs/RandomClass",
+      jm_name: "doNothing",
+      jm_parameters: [],
+      jm_return: None,
+      jm_abstract: true,
+      jm_kind: `Method,
+    },
+    [%expr
+      (this, ()) =>
+        Jvm_ffi_runtime.call_method(
+          ~name="doNothing",
+          ~signature="()V",
+          Jvm_ffi_runtime.call_void_method,
+          this,
+          [||],
         )
     ],
   );
