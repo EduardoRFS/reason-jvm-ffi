@@ -4,20 +4,24 @@
     "build": "dune build -p #{self.name}",
     "install": "esy-installer #{self.name}.install"
   },
+  "scripts": {
+    "test": "esy b dune runtest"
+  },
   "dependencies": {
     "@esy-ocaml/reason": "^3.6.2",
     "@opam/cmdliner": "1.0.4",
     "@opam/dune": "^2.7.1",
-    "@opam/ppx_deriving": "5.1",
+    "@opam/ppx_deriving": "*",
     "@opam/ppx_tools_versioned": "^5.4.0",
     "@opam/ppxlib": "^0.14.0",
     "@reason-native/rely": "^3.2.1",
     "camljava": "EduardoRFS/camljava:package.json",
     "javalib": "EduardoRFS/javalib:package.json#17c3ffb023b32bb854c6dd3d8a9ae98f58ae7302",
-    "ocaml": "~4.10.0"
+    "ocaml": "^4.10.0"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
-    "refmterr": "^3.3.2"
+    "refmterr": "^3.3.2",
+    "ocaml": "4.10.2000"
   }
 }
