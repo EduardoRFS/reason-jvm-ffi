@@ -13,6 +13,19 @@ type ref('a) = Ref.ref('a);
 module Jni = Camljava.Jni;
 include Jni;
 
+let clazz_hash_tbl = Hashtbl.create(64);
+// TODO: that is a workaround
+// because if the class isn't kept loaded during boot on Android, everything breaks;
+let find_class = class_path => {
+  switch (Hashtbl.find_opt(clazz_hash_tbl, class_path)) {
+  | Some(clazz) => clazz
+  | None =>
+    let clazz = Jni.find_class(class_path);
+    Hashtbl.add(clazz_hash_tbl, class_path, clazz);
+    clazz;
+  };
+};
+
 module Array = {
   type t = Jni.obj;
   let unsafe_of_jobject = a => a;

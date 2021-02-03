@@ -9,6 +9,7 @@ type ref('a) = Ref.ref('a);
 
 open Camljava;
 include (module type of Camljava.Jni);
+let find_class: string => clazz;
 
 module Array: {
   type t;
